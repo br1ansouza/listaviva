@@ -12,7 +12,9 @@ Rails.application.routes.draw do
         post :share
       end
 
-      resources :items, controller: "list_items", only: [ :create, :update, :destroy ]
+      resources :items, controller: "list_items", only: [ :create, :update, :destroy ] do
+        post :move, on: :member
+      end
     end
   end
 

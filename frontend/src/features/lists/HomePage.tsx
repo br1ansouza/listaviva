@@ -147,7 +147,18 @@ export function HomePage() {
         variants={fadeUp}
         className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-10 text-[0.68rem] leading-5 text-ink-faint"
       >
-        <span>Feito por Brian, sem cadastro e sem anúncio.</span>
+        <span>
+          Feito por{' '}
+          <a
+            href="https://github.com/br1ansouza"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline focus-visible:underline"
+          >
+            @br1ansouza
+          </a>
+          , sem cadastro e sem anúncio.
+        </span>
         <button
           type="button"
           onClick={() => setTermsOpen(true)}

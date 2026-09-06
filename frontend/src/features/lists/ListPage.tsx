@@ -21,7 +21,6 @@ export function ListPage() {
   const addItem = useListStore((state) => state.addItem);
   const toggleItem = useListStore((state) => state.toggleItem);
   const renameItem = useListStore((state) => state.renameItem);
-  const removeItem = useListStore((state) => state.removeItem);
   const updateList = useListStore((state) => state.updateList);
   const [shareOpen, setShareOpen] = useState(false);
   const connection = useListChannel(list?.id ?? null, null);
@@ -70,7 +69,6 @@ export function ListPage() {
         onAddItem={(content) => report(addItem(content))}
         onToggleItem={(itemId, done) => report(toggleItem(itemId, done))}
         onRenameItem={(itemId, content) => report(renameItem(itemId, content))}
-        onRemoveItem={(itemId) => report(removeItem(itemId))}
         onRenameList={(title) => report(updateList({ title }))}
         onChangeIcon={(icon: ListIconId) => report(updateList({ icon }))}
         onChangeColor={(color: ListColor) => report(updateList({ color }))}

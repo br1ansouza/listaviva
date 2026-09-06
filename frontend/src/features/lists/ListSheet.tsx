@@ -1,5 +1,5 @@
 import { AnimatePresence, m } from 'motion/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { type ListItemPayload, type ListPayload, MAX_ITEMS_PER_LIST } from '@/lib/api';
@@ -15,6 +15,7 @@ import { staggerChildren } from '@/lib/motion';
 import { formatMoney, shoppingValues } from '@/lib/shopping';
 import { ColorPickerPopover } from './ColorPickerPopover';
 import { IconPicker } from './IconPicker';
+import { ItemActionsDialog } from './ItemActionsDialog';
 import { ItemComposer } from './ItemComposer';
 import { ListItemRow } from './ListItemRow';
 import { useListStore } from './useListStore';
@@ -27,7 +28,6 @@ interface ListSheetProps {
   onAddItem: (content: string) => void;
   onToggleItem: (itemId: string, done: boolean) => void;
   onRenameItem: (itemId: string, content: string) => void;
-  onRemoveItem: (itemId: string) => void;
   onRenameList?: (title: string) => void;
   onChangeIcon?: (icon: ListIconId) => void;
   onChangeColor?: (color: ListColor) => void;
@@ -41,7 +41,6 @@ export function ListSheet({
   onAddItem,
   onToggleItem,
   onRenameItem,
-  onRemoveItem,
   onRenameList,
   onChangeIcon,
   onChangeColor,
@@ -54,6 +53,11 @@ export function ListSheet({
   const myParticipantId = list.participant_id;
   const authors = useMemo(() => listAuthors(list.items, list.color), [list.items, list.color]);
   const updateShoppingItem = useListStore((state) => state.updateShoppingItem);
+  const moveItem = useListStore((state) => state.moveItem);
+  const removeItem = useListStore((state) => state.removeItem);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIndex = list.items.findIndex((item) => item.id === selectedId);
+  const selectedItem = list.items[selectedIndex];
   const shopping = list.list_type === 'shopping';
   const total = shopping
     ? list.items.reduce((sum, item) => sum + shoppingValues(item).subtotal, 0)
@@ -160,6 +164,11 @@ export function ListSheet({
 
         <TooltipProvider delayDuration={200}>
           <div className="flex min-h-0 flex-1 flex-col bg-surface px-3 sm:block sm:px-5">
+            {!readOnly && list.items.length > 0 ? (
+              <p className="shrink-0 py-2 text-center text-[0.65rem] text-ink-faint sm:hidden">
+                Segure um item para organizar ou excluir
+              </p>
+            ) : null}
             {shopping ? (
               <div
                 className="shopping-heading hidden shrink-0 border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint sm:grid"
@@ -194,7 +203,7 @@ export function ListSheet({
                       arriving={arrivingItemIds.includes(item.id)}
                       onToggle={(done) => onToggleItem(item.id, done)}
                       onRename={(content) => onRenameItem(item.id, content)}
-                      onRemove={() => onRemoveItem(item.id)}
+                      onActions={() => setSelectedId(item.id)}
                       shopping={shopping}
                       onShoppingChange={(changes) => updateShoppingItem(item.id, changes)}
                     />
@@ -233,6 +242,17 @@ export function ListSheet({
           </div>
         ) : null}
       </div>
+      {!readOnly && selectedItem ? (
+        <ItemActionsDialog
+          key={selectedItem.id}
+          item={selectedItem}
+          index={selectedIndex}
+          count={list.items.length}
+          onClose={() => setSelectedId(null)}
+          onMove={(direction) => moveItem(selectedItem.id, direction)}
+          onRemove={() => removeItem(selectedItem.id)}
+        />
+      ) : null}
     </section>
   );
 }
