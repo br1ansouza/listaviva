@@ -62,10 +62,11 @@ export function ListPage() {
   const expiry = remainingLabel(list.expires_at);
 
   return (
-    <div className="pt-4">
+    <div className="flex min-h-0 flex-1 flex-col pt-4 sm:block">
       <ListSheet
         list={list}
-        editable={list.is_creator}
+        editable
+        customizable={list.is_creator}
         onAddItem={(content) => report(addItem(content))}
         onToggleItem={(itemId, done) => report(toggleItem(itemId, done))}
         onRenameItem={(itemId, content) => report(renameItem(itemId, content))}
@@ -76,7 +77,7 @@ export function ListPage() {
       />
 
       {list.is_creator && (
-        <div className="mt-5 flex flex-wrap items-center gap-3 px-1">
+        <div className="mt-4 flex shrink-0 flex-wrap items-center gap-3 px-1 sm:mt-5">
           <button
             type="button"
             onClick={() => setShareOpen(true)}

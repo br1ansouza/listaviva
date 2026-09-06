@@ -21,6 +21,7 @@ interface ListSheetProps {
   list: ListPayload;
   readOnly?: boolean;
   editable?: boolean;
+  customizable?: boolean;
   onAddItem: (content: string) => void;
   onToggleItem: (itemId: string, done: boolean) => void;
   onRenameItem: (itemId: string, content: string) => void;
@@ -34,6 +35,7 @@ export function ListSheet({
   list,
   readOnly = false,
   editable = false,
+  customizable = false,
   onAddItem,
   onToggleItem,
   onRenameItem,
@@ -46,7 +48,16 @@ export function ListSheet({
   const definition = listTypeById(list.list_type);
   const remaining = list.items.filter((item) => !item.done).length;
   const arrivingItemIds = useListStore((state) => state.arrivingItemIds);
+  const itemRenderKeys = useListStore((state) => state.itemRenderKeys);
   const myDeviceId = deviceId();
+
+  function byOther(item: ListItemPayload): boolean {
+    return item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId;
+  }
+
+  function authorName(item: ListItemPayload): string | null {
+    return item.created_by_name?.trim() || null;
+  }
 
   function authorLabel(item: ListItemPayload): string {
     const author = item.created_by_name?.trim();
@@ -61,20 +72,23 @@ export function ListSheet({
   }
 
   return (
-    <section style={accentStyle(list.color)} className="pt-2 sm:pt-5">
-      <div className="overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[var(--shadow-panel)]">
-        <div className="h-1 bg-accent-list" />
+    <section
+      style={accentStyle(list.color)}
+      className="flex min-h-0 flex-1 flex-col pt-2 sm:block sm:pt-5"
+    >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[var(--shadow-panel)] sm:block">
+        <div className="h-[3px] shrink-0 bg-accent-list" />
 
-        <div className="bg-accent-list-soft px-4 py-4 sm:px-5">
+        <div className="shrink-0 border-b border-hairline bg-surface-raised/50 px-4 py-4 sm:px-5 sm:py-5">
           <div className="flex items-center gap-3">
-            {editable && onChangeIcon ? (
+            {customizable && onChangeIcon ? (
               <IconPicker
                 value={list.icon as ListIconId}
                 onChange={onChangeIcon}
                 className="size-11 rounded-xl"
               />
             ) : (
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-list text-accent-list-foreground">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-accent-list/20 bg-accent-list-soft text-accent-list">
                 <Icon className="size-5" />
               </span>
             )}
@@ -96,44 +110,62 @@ export function ListSheet({
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') event.currentTarget.blur();
                 }}
-                className="hand-title min-w-0 flex-1 bg-transparent text-[2rem] text-ink outline-none"
+                className="hand-title min-w-0 flex-1 bg-transparent text-[1.65rem] text-ellipsis text-ink outline-none sm:text-[2rem]"
               />
             ) : (
-              <h1 className="hand-title min-w-0 flex-1 truncate text-[2rem] text-ink">
+              <h1 className="hand-title min-w-0 flex-1 truncate text-[1.65rem] text-ink sm:text-[2rem]">
                 {list.title}
               </h1>
             )}
 
-            {editable && onChangeColor ? (
+            {customizable && onChangeColor ? (
               <ColorPickerPopover value={list.color as ListColor} onChange={onChangeColor} />
             ) : null}
           </div>
 
-          <div className="mt-2 flex items-center justify-between gap-3 pl-0.5 text-[0.68rem] font-medium text-ink-faint">
+          <div className="mt-3 flex items-center justify-between gap-3 pl-0.5 text-[0.68rem] font-medium text-ink-faint">
             <span>{definition.label}</span>
             <span>{remaining === 0 ? 'tudo riscado' : `${remaining} por fazer`}</span>
           </div>
         </div>
 
+        <div
+          className="progress-track shrink-0"
+          role="progressbar"
+          aria-label="Itens concluídos"
+          aria-valuenow={list.items.length - remaining}
+          aria-valuemin={0}
+          aria-valuemax={list.items.length || 1}
+        >
+          <div
+            className="progress-fill"
+            style={{
+              transform: `scaleX(${list.items.length ? (list.items.length - remaining) / list.items.length : 0})`,
+            }}
+          />
+        </div>
+
         <TooltipProvider delayDuration={200}>
-          <div className="bg-surface px-3 sm:px-5">
-            <div className="list-rules sheet-scroll max-h-[70svh] overflow-y-auto sm:max-h-[55svh]">
+          <div className="flex min-h-0 flex-1 flex-col bg-surface px-3 sm:block sm:px-5">
+            <div className="list-rules sheet-scroll min-h-0 flex-1 overflow-y-auto sm:max-h-[55svh] sm:flex-none">
               <m.ul
                 initial="hidden"
                 animate="visible"
                 variants={{ visible: { transition: staggerChildren(0.03) } }}
               >
                 <AnimatePresence initial={false}>
-                  {list.items.map((item) => (
+                  {list.items.map((item, index) => (
                     <ListItemRow
-                      key={item.id}
+                      key={itemRenderKeys[item.id] ?? item.id}
                       item={item}
                       readOnly={readOnly}
-                      byOther={
-                        item.created_by_device_id !== null &&
-                        item.created_by_device_id !== myDeviceId
+                      byOther={byOther(item)}
+                      showAuthor={
+                        byOther(item) &&
+                        list.items[index - 1]?.created_by_device_id !== item.created_by_device_id
                       }
                       authorLabel={authorLabel(item)}
+                      authorName={authorName(item)}
                       arriving={arrivingItemIds.includes(item.id)}
                       onToggle={(done) => onToggleItem(item.id, done)}
                       onRename={(content) => onRenameItem(item.id, content)}
@@ -145,7 +177,7 @@ export function ListSheet({
             </div>
 
             {readOnly ? null : (
-              <div className="list-rules">
+              <div className="list-rules shrink-0">
                 <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
               </div>
             )}

@@ -20,6 +20,9 @@ function systemTheme(): Theme {
 function applyTheme(theme: Theme): void {
   document.documentElement.classList.toggle('dark', theme === 'dark');
   document.documentElement.style.colorScheme = theme;
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    meta.content = theme === 'dark' ? '#141516' : '#FBF9F3';
+  }
 
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);

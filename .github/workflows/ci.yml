@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, dev]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   backend:
     name: Backend
@@ -14,7 +18,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -38,7 +42,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -55,3 +59,93 @@ jobs:
 
       - name: Build
         run: bun run build
+
+  deploy-backend:
+    name: Deploy do backend
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar deploy no Render
+        id: disparo
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          resposta=$(curl -sS -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"clearCache":"do_not_clear"}' \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys")
+          deploy=$(echo "$resposta" | jq -r '.id // empty')
+          if [ -z "$deploy" ]; then
+            echo "Render nao devolveu id de deploy: $resposta" >&2
+            exit 1
+          fi
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "Deploy $deploy disparado."
+
+      - name: Esperar o deploy ficar live
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DEPLOY_ID: ${{ steps.disparo.outputs.deploy }}
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 60); do
+            estado=$(curl -sS -H "Authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$DEPLOY_ID" \
+              | jq -r '.status')
+            echo "status: $estado"
+            case "$estado" in
+              live) exit 0 ;;
+              build_failed|update_failed|canceled|pre_deploy_failed)
+                echo "Deploy terminou em $estado" >&2
+                exit 1 ;;
+            esac
+            sleep 20
+          done
+          echo "Deploy nao ficou live em 20 minutos" >&2
+          exit 1
+
+      - name: Conferir o health check
+        run: |
+          set -euo pipefail
+          codigo=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 120 https://listaviva-api.onrender.com/up)
+          echo "GET /up -> $codigo"
+          [ "$codigo" = "200" ]
+
+  deploy-frontend:
+    name: Deploy do frontend
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [deploy-backend]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
+
+      - name: Publicar no Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PUBLIC_API_URL: https://listaviva-api.onrender.com
+        run: bun run deploy
+
+      - name: Conferir o Worker
+        run: |
+          set -euo pipefail
+          for rota in / /historico; do
+            codigo=$(curl -sS -o /dev/null -w '%{http_code}' "https://listaviva.br1ansouza.workers.dev$rota")
+            echo "GET $rota -> $codigo"
+            [ "$codigo" = "200" ]
+          done

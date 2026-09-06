@@ -48,6 +48,7 @@ interface ListState {
   status: ListStatus;
   shareToken: string | null;
   arrivingItemIds: string[];
+  itemRenderKeys: Record<string, string>;
   loadById: (id: string) => Promise<void>;
   loadByToken: (token: string) => Promise<void>;
   addItem: (content: string) => Promise<void>;
@@ -97,8 +98,10 @@ export const useListStore = create<ListState>((set, get) => ({
   status: 'idle',
   shareToken: null,
   arrivingItemIds: [],
+  itemRenderKeys: {},
 
-  reset: () => set({ list: null, status: 'idle', shareToken: null, arrivingItemIds: [] }),
+  reset: () =>
+    set({ list: null, status: 'idle', shareToken: null, arrivingItemIds: [], itemRenderKeys: {} }),
 
   loadById: async (id) => {
     set({ status: 'loading' });
@@ -152,9 +155,12 @@ export const useListStore = create<ListState>((set, get) => ({
     try {
       const saved = await api.createItem(list.id, { content: normalized }, shareToken);
       const current = get().list;
-      if (!current) return;
+      if (!current || current.id !== list.id) return;
 
-      set({ list: { ...current, items: withItem(current.items, saved, optimisticId) } });
+      set({
+        list: { ...current, items: withItem(current.items, saved, optimisticId) },
+        itemRenderKeys: { ...get().itemRenderKeys, [saved.id]: optimisticId },
+      });
     } catch (error) {
       const current = get().list;
       if (current) {
@@ -265,6 +271,7 @@ export const useListStore = create<ListState>((set, get) => ({
 
     const item = payload as unknown as ListItemPayload;
     const exists = list.items.some((current) => current.id === item.id);
+    const twinId = optimisticTwinId(list.items, item);
 
     if (!exists && item.created_by_device_id !== deviceId()) {
       set({ arrivingItemIds: [...get().arrivingItemIds, item.id] });
@@ -276,8 +283,11 @@ export const useListStore = create<ListState>((set, get) => ({
     set({
       list: {
         ...list,
-        items: withItem(list.items, item, exists ? undefined : optimisticTwinId(list.items, item)),
+        items: withItem(list.items, item, twinId),
       },
+      itemRenderKeys: twinId
+        ? { ...get().itemRenderKeys, [item.id]: twinId }
+        : get().itemRenderKeys,
     });
   },
 }));

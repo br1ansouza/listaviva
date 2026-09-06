@@ -43,7 +43,9 @@ export function NameDialog() {
     <Dialog open={asking} onOpenChange={(open) => (open ? undefined : skip())}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="hand-title text-[1.75rem]">Como te chamamos?</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Como te chamamos?
+          </DialogTitle>
           <DialogDescription>
             O nome aparece nos itens que você escrever, para a turma saber quem anotou o quê. Fica
             só neste aparelho e dá para trocar depois.
