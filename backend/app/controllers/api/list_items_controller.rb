@@ -6,7 +6,7 @@ module Api
 
     before_action :set_list
     before_action :authorize_list_access!
-    before_action :set_item, only: [ :update, :destroy ]
+    before_action :set_item, only: [ :update, :destroy, :move ]
 
     def create
       item = @list.with_lock do
@@ -58,6 +58,33 @@ module Api
       ListBroadcaster.item_destroyed(@item)
 
       head :no_content
+    end
+
+    def move
+      direction = params.require(:direction)
+      return render_error(:unprocessable_content, "direcao_invalida") unless %w[up down].include?(direction)
+
+      payload = @list.with_lock do
+        authorize_access!(@list)
+        return if performed?
+
+        items = @list.list_items.to_a
+        index = items.index { |item| item.id == @item.id }
+        return render_error(:not_found, "nao_encontrado") unless index
+
+        target = index + (direction == "up" ? -1 : 1)
+        if target.between?(0, items.length - 1)
+          items[index], items[target] = items[target], items[index]
+          items.each_with_index do |item, position|
+            item.update_columns(position: position + 1) if item.position != position + 1
+          end
+          @list.touch
+        end
+
+        { order: items.map(&:id), order_updated_at: @list.updated_at.iso8601(6) }
+      end
+      ListBroadcaster.broadcast(@list, "items_reordered", payload)
+      render json: payload
     end
 
     private

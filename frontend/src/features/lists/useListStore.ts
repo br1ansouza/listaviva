@@ -20,7 +20,13 @@ export type ListStatus =
   | 'error';
 
 export interface ListEvent {
-  event: 'list_updated' | 'item_created' | 'item_updated' | 'item_destroyed' | 'access_changed';
+  event:
+    | 'list_updated'
+    | 'item_created'
+    | 'item_updated'
+    | 'item_destroyed'
+    | 'access_changed'
+    | 'items_reordered';
   payload: Record<string, unknown>;
 }
 
@@ -56,6 +62,7 @@ interface ListState {
   shareToken: string | null;
   arrivingItemIds: string[];
   itemRenderKeys: Record<string, string>;
+  orderUpdatedAt: string | null;
   loadById: (id: string) => Promise<void>;
   loadByToken: (token: string) => Promise<void>;
   addItem: (content: string) => Promise<void>;
@@ -63,6 +70,7 @@ interface ListState {
   renameItem: (itemId: string, content: string) => Promise<void>;
   updateShoppingItem: (itemId: string, changes: ShoppingChanges) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
+  moveItem: (itemId: string, direction: 'up' | 'down') => Promise<void>;
   updateList: (changes: { title?: string; icon?: string; color?: string }) => Promise<void>;
   applyRemoteEvent: (event: ListEvent) => void;
   reset: () => void;
@@ -111,9 +119,17 @@ export const useListStore = create<ListState>((set, get) => ({
   shareToken: null,
   arrivingItemIds: [],
   itemRenderKeys: {},
+  orderUpdatedAt: null,
 
   reset: () =>
-    set({ list: null, status: 'idle', shareToken: null, arrivingItemIds: [], itemRenderKeys: {} }),
+    set({
+      list: null,
+      status: 'idle',
+      shareToken: null,
+      arrivingItemIds: [],
+      itemRenderKeys: {},
+      orderUpdatedAt: null,
+    }),
 
   loadById: async (id) => {
     set({ status: 'loading' });
@@ -242,6 +258,15 @@ export const useListStore = create<ListState>((set, get) => ({
     }
   },
 
+  moveItem: async (itemId, direction) => {
+    const { list, shareToken } = get();
+    if (!list || itemId.startsWith('temp-')) return;
+    const order = await api.moveItem(list.id, itemId, direction, shareToken);
+    if (get().list?.id === list.id) {
+      get().applyRemoteEvent({ event: 'items_reordered', payload: { ...order } });
+    }
+  },
+
   removeItem: async (itemId) => {
     const { list, shareToken } = get();
     if (!list) return;
@@ -282,6 +307,27 @@ export const useListStore = create<ListState>((set, get) => ({
     if (!list) return;
     if (event === 'access_changed') return;
 
+    if (event === 'items_reordered') {
+      if (!Array.isArray(payload.order) || typeof payload.order_updated_at !== 'string') return;
+      const previousOrderAt = get().orderUpdatedAt;
+      if (previousOrderAt && previousOrderAt >= payload.order_updated_at) return;
+      const order = payload.order;
+      const positions = new Map(order.map((id, index) => [id, index + 1]));
+      set({
+        orderUpdatedAt: payload.order_updated_at,
+        list: {
+          ...list,
+          items: sortItems(
+            list.items.map((item, index) => ({
+              ...item,
+              position: positions.get(item.id) ?? order.length + index + 1,
+            })),
+          ),
+        },
+      });
+      return;
+    }
+
     if (event === 'list_updated') {
       set({ list: { ...list, ...(payload as Partial<ListPayload>) } });
       return;
@@ -308,7 +354,11 @@ export const useListStore = create<ListState>((set, get) => ({
     set({
       list: {
         ...list,
-        items: withItem(list.items, item, twinId),
+        items: withItem(
+          list.items,
+          currentItem ? { ...item, position: currentItem.position } : item,
+          twinId,
+        ),
       },
       itemRenderKeys: twinId
         ? { ...get().itemRenderKeys, [item.id]: twinId }
