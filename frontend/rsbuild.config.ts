@@ -38,6 +38,16 @@ export default defineConfig({
       { tag: 'link', attrs: { rel: 'manifest', href: 'manifest.webmanifest' } },
       { tag: 'link', attrs: { rel: 'icon', type: 'image/svg+xml', href: 'icons/mark.svg' } },
       { tag: 'link', attrs: { rel: 'apple-touch-icon', href: 'icons/apple-touch-icon.png' } },
+      {
+        tag: 'meta',
+        attrs: { name: 'theme-color', content: '#FBF9F3', media: '(prefers-color-scheme: light)' },
+      },
+      {
+        tag: 'meta',
+        attrs: { name: 'theme-color', content: '#0D1712', media: '(prefers-color-scheme: dark)' },
+      },
+      { tag: 'meta', attrs: { name: 'apple-mobile-web-app-capable', content: 'yes' } },
+      { tag: 'meta', attrs: { name: 'apple-mobile-web-app-title', content: 'ListaViva' } },
     ],
   },
   server: {

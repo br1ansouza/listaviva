@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ListaViva">
+  <style>
+    .bg { fill: #FFFFFF; }
+    .first { stroke: #090B0A; }
+    .second { stroke: #0F9D58; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #050706; }
+      .first { stroke: #FFFFFF; }
+      .second { stroke: #19B965; }
+    }
+  </style>
+  <rect class="bg" width="512" height="512" rx="112"/>
+  <path class="first" d="m104 270 86 86 140-168" fill="none" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="second" d="m208 270 80 80 126-148" fill="none" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
