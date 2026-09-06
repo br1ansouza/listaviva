@@ -5,8 +5,10 @@ import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ListItemPayload } from '@/lib/api';
 import { easing, sheetItem, spring } from '@/lib/motion';
+import type { ShoppingChanges } from '@/lib/shopping';
 import { cn } from '@/lib/utils';
 import { HandStrike } from './HandStrike';
+import { ShoppingFields } from './ShoppingFields';
 
 interface ListItemRowProps {
   item: ListItemPayload;
@@ -19,6 +21,8 @@ interface ListItemRowProps {
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
   onRemove: () => void;
+  shopping?: boolean;
+  onShoppingChange?: (changes: ShoppingChanges) => Promise<void>;
 }
 
 export function ListItemRow({
@@ -32,6 +36,8 @@ export function ListItemRow({
   onToggle,
   onRename,
   onRemove,
+  shopping = false,
+  onShoppingChange,
 }: ListItemRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.content);
@@ -65,7 +71,7 @@ export function ListItemRow({
       exit="exit"
       className={cn(
         'group relative items-center gap-x-3 pr-1 pl-3',
-        byOther ? 'attributed-item sm:flex' : 'flex',
+        shopping ? 'shopping-item' : byOther ? 'attributed-item sm:flex' : 'flex',
       )}
       style={{ ...authorStyle, minHeight: 'var(--rule-height)' }}
     >
@@ -161,6 +167,14 @@ export function ListItemRow({
             {authorLabel}
           </TooltipContent>
         </Tooltip>
+      ) : null}
+
+      {shopping && onShoppingChange ? (
+        <ShoppingFields
+          item={item}
+          readOnly={readOnly || item.id.startsWith('temp-')}
+          onChange={onShoppingChange}
+        />
       ) : null}
 
       {!readOnly && (

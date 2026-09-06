@@ -15,6 +15,7 @@ class ListItem < ApplicationRecord
   validates :updated_by_name, length: { maximum: AUTHOR_NAME_LIMIT }, allow_nil: true
   validates :created_by_name, length: { maximum: AUTHOR_NAME_LIMIT }, allow_nil: true
   validate :metadata_within_limit
+  validate :shopping_values_valid
 
   before_validation :normalize_content
   before_validation :assign_position, on: :create
@@ -37,5 +38,22 @@ class ListItem < ApplicationRecord
     return if metadata.blank?
 
     errors.add(:metadata, "excede o tamanho maximo") if metadata.to_json.bytesize > METADATA_BYTE_LIMIT
+  end
+
+  def shopping_values_valid
+    return if metadata.nil?
+    unless metadata.is_a?(Hash)
+      errors.add(:metadata, "deve ser um objeto")
+      return
+    end
+
+    quantity = metadata["quantity_millis"]
+    price = metadata["unit_price_cents"]
+    if metadata.key?("quantity_millis") && !(quantity.is_a?(Integer) && quantity.between?(1, 9_999_999))
+      errors.add(:metadata, "quantidade invalida")
+    end
+    if !price.nil? && !(price.is_a?(Integer) && price.between?(0, 99_999_999))
+      errors.add(:metadata, "preco invalido")
+    end
   end
 end
