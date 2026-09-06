@@ -49,7 +49,7 @@ export function ListSheet({
 
   return (
     <section style={accentStyle(list.color)} className="pt-2 sm:pt-5">
-      <div className="overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[0_18px_48px_color-mix(in_oklab,var(--ink)_8%,transparent)]">
+      <div className="overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[var(--shadow-panel)]">
         <div className="h-1 bg-accent-list" />
 
         <div className="bg-accent-list-soft px-4 py-4 sm:px-5">

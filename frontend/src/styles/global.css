@@ -17,6 +17,8 @@
   --rule-margin: oklch(0.62 0.17 28 / 0.28);
   --hairline: oklch(0.25 0.02 155 / 0.12);
   --brand: oklch(0.57 0.145 158);
+  --shadow-panel: 0 1px 2px oklch(0.22 0.02 155 / 0.05), 0 10px 26px oklch(0.22 0.02 155 / 0.055);
+  --shadow-button: 0 1px 2px oklch(0.16 0.02 158 / 0.16);
 
   --list-coral: oklch(0.61 0.16 32);
   --list-coral-soft: oklch(0.925 0.04 32);
@@ -71,21 +73,23 @@
   --hairline: oklch(0.95 0.01 150 / 0.11);
   --brand: oklch(0.72 0.15 158);
 
-  --list-coral: oklch(0.71 0.17 32);
-  --list-coral-soft: oklch(0.255 0.055 32);
-  --list-mint: oklch(0.7 0.135 162);
-  --list-mint-soft: oklch(0.25 0.048 162);
-  --list-lavender: oklch(0.72 0.145 295);
-  --list-lavender-soft: oklch(0.255 0.052 295);
-  --list-butter: oklch(0.79 0.15 82);
-  --list-butter-soft: oklch(0.27 0.05 82);
-  --list-sky: oklch(0.71 0.145 242);
-  --list-sky-soft: oklch(0.25 0.05 242);
-  --list-blush: oklch(0.73 0.16 355);
-  --list-blush-soft: oklch(0.26 0.055 355);
+  --list-coral: oklch(0.68 0.12 32);
+  --list-coral-soft: oklch(0.235 0.034 32);
+  --list-mint: oklch(0.66 0.105 162);
+  --list-mint-soft: oklch(0.23 0.032 162);
+  --list-lavender: oklch(0.68 0.11 295);
+  --list-lavender-soft: oklch(0.235 0.034 295);
+  --list-butter: oklch(0.73 0.115 82);
+  --list-butter-soft: oklch(0.24 0.032 82);
+  --list-sky: oklch(0.67 0.11 242);
+  --list-sky-soft: oklch(0.23 0.033 242);
+  --list-blush: oklch(0.69 0.12 355);
+  --list-blush-soft: oklch(0.235 0.035 355);
   --accent-list-foreground: oklch(0.16 0.02 158);
+  --shadow-panel: 0 1px 0 oklch(1 0 0 / 0.025) inset, 0 8px 20px oklch(0.06 0.01 158 / 0.22);
+  --shadow-button: 0 1px 2px oklch(0.06 0.01 158 / 0.28);
 
-  --primary: oklch(0.68 0.135 158);
+  --primary: oklch(0.65 0.11 158);
   --primary-foreground: oklch(0.16 0.02 158);
   --secondary: oklch(0.245 0.022 158);
   --secondary-foreground: var(--ink);
@@ -208,15 +212,7 @@
     border: 1px solid var(--hairline);
     border-radius: 1.5rem;
     background: color-mix(in oklab, var(--surface) 94%, transparent);
-    box-shadow:
-      0 1px 0 color-mix(in oklab, white 60%, transparent) inset,
-      0 18px 50px color-mix(in oklab, var(--ink) 7%, transparent);
-  }
-
-  .dark .surface-panel {
-    box-shadow:
-      0 1px 0 color-mix(in oklab, white 5%, transparent) inset,
-      0 22px 60px color-mix(in oklab, black 26%, transparent);
+    box-shadow: var(--shadow-panel);
   }
 
   .list-rules {
@@ -283,20 +279,16 @@
     color: var(--primary-foreground);
     font-size: 0.9375rem;
     font-weight: 650;
-    box-shadow:
-      0 1px 0 color-mix(in oklab, white 20%, transparent) inset,
-      0 10px 24px color-mix(in oklab, var(--primary) 20%, transparent);
+    white-space: nowrap;
+    box-shadow: var(--shadow-button);
     transition:
       transform 180ms ease,
       filter 180ms ease,
-      box-shadow 180ms ease;
+      background-color 180ms ease;
   }
 
   .primary-action:hover {
     filter: brightness(1.05);
-    box-shadow:
-      0 1px 0 color-mix(in oklab, white 24%, transparent) inset,
-      0 12px 28px color-mix(in oklab, var(--primary) 25%, transparent);
   }
 
   .primary-action:active {
@@ -307,6 +299,10 @@
     cursor: not-allowed;
     opacity: 0.6;
   }
+
+  .history-row {
+    transition: background-color 160ms ease;
+  }
 }
 
 @media (min-width: 640px) {
@@ -314,6 +310,12 @@
     border-bottom-color: transparent;
     background: transparent;
     backdrop-filter: none;
+  }
+}
+
+@media (hover: hover) {
+  .history-row:hover {
+    background-color: color-mix(in oklab, var(--muted) 45%, transparent);
   }
 }
 
