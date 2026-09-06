@@ -59,17 +59,17 @@
   --rule-line: oklch(0.94 0.008 158 / 0.08);
   --rule-margin: oklch(0.75 0.03 158 / 0.22);
   --hairline: oklch(0.94 0.008 158 / 0.12);
-  --brand: oklch(0.72 0.15 158);
+  --brand: oklch(0.63 0.13 158);
 
-  --list-coral: oklch(0.44 0.008 158);
-  --list-mint: oklch(0.62 0.009 158);
-  --list-lavender: oklch(0.38 0.008 158);
-  --list-butter: oklch(0.68 0.009 158);
-  --list-sky: oklch(0.5 0.008 158);
-  --list-blush: oklch(0.56 0.009 158);
+  --list-coral: oklch(0.26 0.012 158);
+  --list-lavender: oklch(0.29 0.012 158);
+  --list-sky: oklch(0.32 0.013 158);
+  --list-blush: oklch(0.355 0.013 158);
+  --list-mint: oklch(0.39 0.014 158);
+  --list-butter: oklch(0.425 0.014 158);
 
-  --primary: oklch(0.72 0.15 158);
-  --primary-foreground: oklch(0.16 0.018 158);
+  --primary: oklch(0.5 0.11 158);
+  --primary-foreground: oklch(0.97 0.01 158);
   --secondary: oklch(0.26 0.016 158);
   --secondary-foreground: var(--ink);
   --muted: oklch(0.26 0.016 158);

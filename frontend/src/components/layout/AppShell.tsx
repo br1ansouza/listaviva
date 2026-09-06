@@ -1,19 +1,43 @@
-import { History } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
 import { m } from 'motion/react';
 import type { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 
 import { Mark } from '@/components/brand/Mark';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { transition } from '@/lib/motion';
+import { spring, transition } from '@/lib/motion';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const isHome = location.pathname === '/';
   const isHistory = location.pathname.startsWith('/historico');
+
+  function goBack() {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/');
+  }
 
   return (
     <div className="paper-sheet min-h-dvh">
-      <header className="relative z-10 mx-auto flex w-full max-w-2xl items-center gap-3 px-4 pt-5 pb-2 sm:px-6">
+      <header className="relative z-10 mx-auto flex w-full max-w-2xl items-center gap-2 px-4 pt-5 pb-2 sm:px-6">
+        {!isHome && (
+          <m.button
+            type="button"
+            onClick={goBack}
+            whileTap={{ scale: 0.9 }}
+            transition={spring.snappy}
+            aria-label="Voltar"
+            className="-ml-1 grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:text-ink"
+          >
+            <ArrowLeft className="size-[20px]" />
+          </m.button>
+        )}
+
         <Link to="/" className="flex items-center gap-2.5 text-ink" aria-label="Início">
           <Mark className="size-7" />
           <span className="hand-title text-3xl leading-none">ListaViva</span>

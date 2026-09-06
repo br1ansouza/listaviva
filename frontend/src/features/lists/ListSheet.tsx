@@ -1,6 +1,7 @@
 import { AnimatePresence, m } from 'motion/react';
 
 import type { ListPayload } from '@/lib/api';
+import { deviceId } from '@/lib/device';
 import {
   accentStyle,
   iconById,
@@ -9,10 +10,11 @@ import {
   listTypeById,
 } from '@/lib/list-catalog';
 import { staggerChildren } from '@/lib/motion';
-import { ColorPicker } from './ColorPicker';
+import { ColorPickerPopover } from './ColorPickerPopover';
 import { IconPicker } from './IconPicker';
 import { ItemComposer } from './ItemComposer';
 import { ListItemRow } from './ListItemRow';
+import { useListStore } from './useListStore';
 
 interface ListSheetProps {
   list: ListPayload;
@@ -42,6 +44,8 @@ export function ListSheet({
   const Icon = iconById(list.icon);
   const definition = listTypeById(list.list_type);
   const remaining = list.items.filter((item) => !item.done).length;
+  const arrivingItemIds = useListStore((state) => state.arrivingItemIds);
+  const myDeviceId = deviceId();
 
   return (
     <section style={accentStyle(list.color)} className="pt-2">
@@ -79,17 +83,14 @@ export function ListSheet({
         )}
       </div>
 
-      <p className="mt-1.5 px-1 text-right text-xs text-ink-faint">
-        {remaining === 0 ? 'tudo feito' : `${remaining} restantes`}
-      </p>
-
-      {editable && onChangeColor ? (
-        <ColorPicker
-          value={list.color as ListColor}
-          onChange={onChangeColor}
-          className="mt-3 px-1"
-        />
-      ) : null}
+      <div className="mt-1.5 flex items-center justify-end gap-1 px-1">
+        <span className="text-xs text-ink-faint">
+          {remaining === 0 ? 'tudo feito' : `${remaining} restantes`}
+        </span>
+        {editable && onChangeColor ? (
+          <ColorPickerPopover value={list.color as ListColor} onChange={onChangeColor} />
+        ) : null}
+      </div>
 
       <m.ul
         initial="hidden"
@@ -103,6 +104,10 @@ export function ListSheet({
               key={item.id}
               item={item}
               readOnly={readOnly}
+              byOther={
+                item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId
+              }
+              arriving={arrivingItemIds.includes(item.id)}
               onToggle={(done) => onToggleItem(item.id, done)}
               onRename={(content) => onRenameItem(item.id, content)}
               onRemove={() => onRemoveItem(item.id)}

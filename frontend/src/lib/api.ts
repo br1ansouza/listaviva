@@ -9,6 +9,7 @@ export interface ListItemPayload {
   done: boolean;
   position: number;
   metadata: Record<string, unknown> | null;
+  created_by_device_id: string | null;
   updated_by_device_id: string | null;
   created_at: string;
   updated_at: string;

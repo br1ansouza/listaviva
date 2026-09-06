@@ -7,7 +7,9 @@ module Api
     before_action :set_item, only: [ :update, :destroy ]
 
     def create
-      item = @list.list_items.create!(item_params.merge(updated_by_device_id: device_id))
+      item = @list.list_items.create!(
+        item_params.merge(created_by_device_id: device_id, updated_by_device_id: device_id),
+      )
       ListBroadcaster.item_created(item)
 
       render json: ListItemSerializer.call(item), status: :created

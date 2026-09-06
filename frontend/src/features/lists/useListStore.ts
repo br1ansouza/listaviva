@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { ApiError, api, type ListItemPayload, type ListPayload } from '@/lib/api';
+import { deviceId } from '@/lib/device';
 
 export type ListStatus =
   | 'idle'
@@ -16,10 +17,13 @@ export interface ListEvent {
   payload: Record<string, unknown>;
 }
 
+const ARRIVAL_HIGHLIGHT_MS = 2_600;
+
 interface ListState {
   list: ListPayload | null;
   status: ListStatus;
   shareToken: string | null;
+  arrivingItemIds: string[];
   loadById: (id: string) => Promise<void>;
   loadByToken: (token: string) => Promise<void>;
   addItem: (content: string) => Promise<void>;
@@ -37,6 +41,23 @@ function sortItems(items: ListItemPayload[]): ListItemPayload[] {
   );
 }
 
+function withItem(
+  items: ListItemPayload[],
+  item: ListItemPayload,
+  replacedId?: string,
+): ListItemPayload[] {
+  const others = items.filter((current) => current.id !== item.id && current.id !== replacedId);
+
+  return sortItems([...others, item]);
+}
+
+function optimisticTwinId(items: ListItemPayload[], item: ListItemPayload): string | undefined {
+  if (item.created_by_device_id !== deviceId()) return undefined;
+
+  return items.find((current) => current.id.startsWith('temp-') && current.content === item.content)
+    ?.id;
+}
+
 function statusFromError(error: unknown): ListStatus {
   if (error instanceof ApiError) {
     if (error.isExpired) return 'expired';
@@ -51,8 +72,9 @@ export const useListStore = create<ListState>((set, get) => ({
   list: null,
   status: 'idle',
   shareToken: null,
+  arrivingItemIds: [],
 
-  reset: () => set({ list: null, status: 'idle', shareToken: null }),
+  reset: () => set({ list: null, status: 'idle', shareToken: null, arrivingItemIds: [] }),
 
   loadById: async (id) => {
     set({ status: 'loading' });
@@ -89,7 +111,8 @@ export const useListStore = create<ListState>((set, get) => ({
       done: false,
       position: (list.items.at(-1)?.position ?? 0) + 1,
       metadata: null,
-      updated_by_device_id: null,
+      created_by_device_id: deviceId(),
+      updated_by_device_id: deviceId(),
       created_at: now,
       updated_at: now,
     };
@@ -101,12 +124,7 @@ export const useListStore = create<ListState>((set, get) => ({
       const current = get().list;
       if (!current) return;
 
-      set({
-        list: {
-          ...current,
-          items: sortItems(current.items.map((item) => (item.id === optimisticId ? saved : item))),
-        },
-      });
+      set({ list: { ...current, items: withItem(current.items, saved, optimisticId) } });
     } catch (error) {
       const current = get().list;
       if (current) {
@@ -212,14 +230,17 @@ export const useListStore = create<ListState>((set, get) => ({
     const item = payload as unknown as ListItemPayload;
     const exists = list.items.some((current) => current.id === item.id);
 
+    if (!exists && item.created_by_device_id !== deviceId()) {
+      set({ arrivingItemIds: [...get().arrivingItemIds, item.id] });
+      setTimeout(() => {
+        set({ arrivingItemIds: get().arrivingItemIds.filter((id) => id !== item.id) });
+      }, ARRIVAL_HIGHLIGHT_MS);
+    }
+
     set({
       list: {
         ...list,
-        items: sortItems(
-          exists
-            ? list.items.map((current) => (current.id === item.id ? item : current))
-            : [...list.items, item],
-        ),
+        items: withItem(list.items, item, exists ? undefined : optimisticTwinId(list.items, item)),
       },
     });
   },

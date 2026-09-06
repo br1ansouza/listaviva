@@ -9,6 +9,7 @@ module ListItemSerializer
       done: item.done,
       position: item.position,
       metadata: item.metadata,
+      created_by_device_id: item.created_by_device_id,
       updated_by_device_id: item.updated_by_device_id,
       created_at: item.created_at,
       updated_at: item.updated_at

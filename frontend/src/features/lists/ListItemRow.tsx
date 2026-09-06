@@ -3,13 +3,15 @@ import { m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { ListItemPayload } from '@/lib/api';
-import { sheetItem, spring } from '@/lib/motion';
+import { easing, sheetItem, spring } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { HandStrike } from './HandStrike';
 
 interface ListItemRowProps {
   item: ListItemPayload;
   readOnly?: boolean;
+  byOther?: boolean;
+  arriving?: boolean;
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
   onRemove: () => void;
@@ -18,6 +20,8 @@ interface ListItemRowProps {
 export function ListItemRow({
   item,
   readOnly = false,
+  byOther = false,
+  arriving = false,
   onToggle,
   onRename,
   onRemove,
@@ -52,9 +56,27 @@ export function ListItemRow({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="group flex items-center gap-3 pr-1"
+      className="group relative flex items-center gap-3 pr-1 pl-3"
       style={{ minHeight: 'var(--rule-height)' }}
     >
+      <span
+        aria-hidden
+        className={cn(
+          'absolute top-1/2 left-0 h-[1.05em] w-[3px] -translate-y-1/2 rounded-full bg-accent-list transition-opacity',
+          byOther ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+
+      {arriving && (
+        <m.span
+          aria-hidden
+          initial={{ opacity: 0.55 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 1.6, ease: easing.out }}
+          className="pointer-events-none absolute inset-y-0 -inset-x-2 rounded-lg bg-accent-list"
+        />
+      )}
+
       <m.button
         type="button"
         disabled={readOnly}
