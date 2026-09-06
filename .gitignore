@@ -1,0 +1,84 @@
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+*.local.md
+CLAUDE.md
+.claude/
+.codex/
+.agents/
+.kiro/
+
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa*
+*.gpg
+secrets.json
+credentials.yml.enc
+master.key
+config/master.key
+config/credentials.yml.enc
+config/credentials/
+backend/config/master.key
+backend/config/credentials.yml.enc
+backend/config/credentials/
+backend/.kamal/secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Dependencias
+node_modules/
+vendor/bundle/
+.bundle/
+.yarn/
+.pnp.*
+
+# Build
+dist/
+build/
+frontend/dist/
+backend/public/assets/
+backend/storage/
+.rsbuild/
+
+# Banco e dumps
+pgdata/
+*.sql
+*.sqlite3
+*.sqlite3-*
+*.dump
+db/*.sql
+db/*.sqlite3
+backend/storage/*.sqlite3*
+
+# Logs e temporarios
+*.log
+log/
+tmp/
+backend/log/
+backend/tmp/
+.cache/
+
+# Docker local
+docker-compose.override.yml
+
+# Editores e SO
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# Documentacao interna (nao publicada)
+docs/
