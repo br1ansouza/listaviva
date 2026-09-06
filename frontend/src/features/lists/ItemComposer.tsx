@@ -7,16 +7,17 @@ import { spring } from '@/lib/motion';
 interface ItemComposerProps {
   placeholder: string;
   onAdd: (content: string) => void;
+  atLimit?: boolean;
 }
 
-export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
+export function ItemComposer({ placeholder, onAdd, atLimit = false }: ItemComposerProps) {
   const [content, setContent] = useState('');
 
   function submit(event: FormEvent) {
     event.preventDefault();
 
     const trimmed = content.trim();
-    if (!trimmed) return;
+    if (!trimmed || atLimit) return;
 
     onAdd(trimmed);
     setContent('');
@@ -33,7 +34,8 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
         whileTap={{ scale: 0.85 }}
         transition={spring.snappy}
         aria-label="Adicionar item"
-        className="grid size-[22px] shrink-0 place-items-center rounded-md border border-dashed border-accent-list/70 bg-accent-list-soft/55 text-accent-list transition-colors hover:bg-accent-list-soft"
+        disabled={atLimit}
+        className="grid size-[22px] shrink-0 place-items-center rounded-md border border-dashed border-accent-list/70 bg-accent-list-soft/55 text-accent-list transition-colors hover:bg-accent-list-soft disabled:opacity-40"
       >
         <Plus className="size-3.5" strokeWidth={3} />
       </m.button>
@@ -41,7 +43,9 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
       <input
         value={content}
         onChange={(event) => setContent(event.target.value)}
-        placeholder={placeholder}
+        placeholder={atLimit ? '230 itens. Exclua um para adicionar outro.' : placeholder}
+        aria-label={atLimit ? 'Limite de 230 itens atingido' : placeholder}
+        readOnly={atLimit}
         maxLength={500}
         className="w-full bg-transparent text-[0.95rem] leading-[var(--rule-height)] text-ink outline-none placeholder:text-ink-faint"
       />

@@ -3,6 +3,9 @@ class ApplicationController < ActionController::API
   SHARE_TOKEN_HEADER = "HTTP_X_SHARE_TOKEN".freeze
   DEVICE_NAME_HEADER = "HTTP_X_DEVICE_NAME".freeze
 
+  before_action :prevent_sensitive_caching
+  before_action :require_device_id!
+
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_invalid
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
@@ -21,11 +24,17 @@ class ApplicationController < ActionController::API
     return @device_name if defined?(@device_name)
 
     raw = request.get_header(DEVICE_NAME_HEADER).presence
-    @device_name = raw && CGI.unescape(raw).grapheme_clusters.first(ListItem::AUTHOR_NAME_LIMIT).join.strip.presence
+    @device_name = raw && CGI.unescape(raw).force_encoding(Encoding::UTF_8).scrub.gsub(/[[:cntrl:]]/, "").grapheme_clusters.first(ListItem::AUTHOR_NAME_LIMIT).join.strip.presence
   end
 
   def require_device_id!
-    render_error(:bad_request, "device_id_ausente") if device_id.blank?
+    render_error(:bad_request, "device_id_invalido") unless DeviceIdentity.valid?(device_id)
+  end
+
+  def prevent_sensitive_caching
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Frame-Options"] = "DENY"
   end
 
   def render_not_found

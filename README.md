@@ -39,6 +39,8 @@ O ListaViva tira as pequenas combinações do meio das mensagens do grupo. Cada 
 
 Gerar outro link substitui o anterior. Listas com compartilhamento expirado há mais de 90 dias entram na rotina de limpeza.
 
+Cada lista aceita até **230 itens**. O histórico comporta **30 listas por identidade do navegador**: ao atingir esse limite, o app oferece excluir a mais antiga para criar outra, exibindo seu título, data e quantidade de itens. A exclusão exige confirmação e é permanente; cancelar preserva tudo. Itens nunca são excluídos automaticamente para abrir espaço.
+
 ## Rodando localmente
 
 Você precisa de **Git**, **Bun** e **Docker com Compose**. Ruby e PostgreSQL rodam em containers; não é necessário instalá-los na máquina. Os scripts abaixo usam Bash.
@@ -129,6 +131,16 @@ O navegador gera um UUID e o mantém em `localStorage` e cookie. O app também s
 
 O histórico pertence a essa identidade, não a uma conta sincronizada entre aparelhos. Limpar os dados do site pode fazer você perder o acesso como criador. O nome escolhido acompanha as anotações para indicar quem escreveu ou editou cada item.
 
+Esse UUID é uma credencial privada, não um identificador público de autor. As respostas HTTP e os eventos usam `created_by_id`, `updated_by_id` e `participant_id`, derivados por HMAC e diferentes em cada lista. Esses IDs públicos não autenticam requisições.
+
+### Segurança e limites
+
+A API verifica permissões independentemente do frontend. O WebSocket revalida o acesso antes de transmitir cada evento e periodicamente, encerrando a assinatura quando o link muda, expira ou a lista é excluída. Respostas privadas usam `Cache-Control: no-store`.
+
+Os limites de itens e listas são conferidos no servidor, com transações e locks para impedir que criações simultâneas ultrapassem a cota. Uma confirmação antiga não pode excluir outra lista nem uma versão modificada da lista exibida. Se a nova lista for inválida, a transação preserva a anterior. Dados que já excedam as cotas não são removidos retroativamente; históricos acima de 30 permitem somente substituição, sem crescimento.
+
+Quem tem um link válido continua podendo editar e excluir itens: as cotas contêm volume, não tornam o compartilhamento à prova de vandalismo. Veja [o modelo de segurança e os cuidados de publicação](SECURITY.md).
+
 ### Estrutura
 
 ```text
@@ -164,6 +176,8 @@ scripts/                Desenvolvimento e preview
 | `GET` | `/cable` | Conexão WebSocket do Action Cable |
 
 O frontend envia `X-Device-Id` em todas as requisições, `X-Device-Name` quando há um nome escolhido e `X-Share-Token` nas operações de quem entrou pelo link. Um link expirado retorna `410 Gone` para visitantes; o criador continua com acesso durante o período de retenção.
+
+`POST /api/lists` retorna `409 limite_de_listas` ao atingir a cota, com `oldest_list` para a confirmação. Somente após confirmar na interface, repita a criação com `replace_list_id` e `replace_list_version` (`oldest_list.version`) no corpo, ao lado de `list`. A substituição é restrita à lista mais antiga do próprio criador. A cota de itens retorna `422 limite_de_itens`; excesso de requisições retorna `429` com `Retry-After`; corpos acima de 32 KiB retornam `413`.
 
 </details>
 

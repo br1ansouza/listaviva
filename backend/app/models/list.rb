@@ -6,6 +6,7 @@ class List < ApplicationRecord
   }.freeze
 
   TOKEN_BYTES = 16
+  DEVICE_LIMIT = 30
   SLUG_FORMAT = /\A[a-z][a-z0-9-]{0,39}\z/
 
   has_many :list_items, -> { order(:position, :created_at) }, dependent: :destroy

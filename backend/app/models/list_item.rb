@@ -1,10 +1,12 @@
 class ListItem < ApplicationRecord
   METADATA_BYTE_LIMIT = 2_000
   AUTHOR_NAME_LIMIT = 15
+  PER_LIST_LIMIT = 230
 
   belongs_to :list, touch: true
 
   validates :content, presence: true, length: { maximum: 500 }
+  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 2_147_483_647 }
   validates :content,
     uniqueness: { scope: :list_id, case_sensitive: false, message: "ja esta na lista" },
     allow_blank: true

@@ -9,8 +9,8 @@ export interface ListItemPayload {
   done: boolean;
   position: number;
   metadata: Record<string, unknown> | null;
-  created_by_device_id: string | null;
-  updated_by_device_id: string | null;
+  created_by_id: string | null;
+  updated_by_id: string | null;
   created_by_name: string | null;
   updated_by_name: string | null;
   created_at: string;
@@ -27,6 +27,7 @@ export interface ListPayload {
   expires_at: string | null;
   expired: boolean;
   is_creator: boolean;
+  participant_id: string;
   created_at: string;
   updated_at: string;
   items: ListItemPayload[];
@@ -41,15 +42,27 @@ export interface SharePayload extends ListPayload {
   whatsapp_url: string;
 }
 
+export const MAX_ITEMS_PER_LIST = 230;
+
+export interface ListReplacement {
+  id: string;
+  title: string;
+  created_at: string;
+  items_count: number;
+  version: string;
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
+  readonly oldestList?: ListReplacement;
 
-  constructor(status: number, code: string) {
+  constructor(status: number, code: string, oldestList?: ListReplacement) {
     super(`${status} ${code}`);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.oldestList = oldestList;
   }
 
   get isExpired(): boolean {
@@ -117,7 +130,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       data && typeof data === 'object' && 'error' in data
         ? String(data.error)
         : 'erro_desconhecido';
-    throw new ApiError(response.status, code);
+    const oldestList =
+      code === 'limite_de_listas' && data && typeof data === 'object' && 'oldest_list' in data
+        ? (data.oldest_list as ListReplacement)
+        : undefined;
+    throw new ApiError(response.status, code, oldestList);
   }
 
   return data as T;
@@ -131,8 +148,17 @@ export interface ListDraft {
 }
 
 export const api = {
-  createList: (list: ListDraft) =>
-    request<ListPayload>('/lists', { method: 'POST', body: { list } }),
+  createList: (list: ListDraft, replacement?: ListReplacement) =>
+    request<ListPayload>('/lists', {
+      method: 'POST',
+      body: {
+        list,
+        ...(replacement && {
+          replace_list_id: replacement.id,
+          replace_list_version: replacement.version,
+        }),
+      },
+    }),
 
   getList: (id: string, shareToken?: string | null) =>
     request<ListPayload>(`/lists/${id}`, { shareToken }),
