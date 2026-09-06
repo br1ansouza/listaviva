@@ -30,6 +30,7 @@ function readCookie(key: string): string | null {
 function writeCookie(key: string, value: string): void {
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';
 
+  // biome-ignore lint/suspicious/noDocumentCookie: a Cookie Store API nao existe no Safari, que e justamente o navegador que este cookie serve
   document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`;
 }
 

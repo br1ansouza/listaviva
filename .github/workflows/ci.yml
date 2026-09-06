@@ -20,9 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Conferir a versao do Ruby nos tres lugares
+        run: |
+          set -euo pipefail
+          arquivo=$(sed 's/^ruby-//' .ruby-version)
+          producao=$(sed -n 's/^ARG RUBY_VERSION=//p' Dockerfile)
+          desenvolvimento=$(sed -n 's|^FROM docker.io/library/ruby:\(.*\)-slim$|\1|p' Dockerfile.dev)
+          echo ".ruby-version=$arquivo Dockerfile=$producao Dockerfile.dev=$desenvolvimento"
+          if [ "$arquivo" != "$producao" ] || [ "$arquivo" != "$desenvolvimento" ]; then
+            echo "Versoes de Ruby divergentes entre .ruby-version, Dockerfile e Dockerfile.dev" >&2
+            exit 1
+          fi
+
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: backend/.ruby-version
+          ruby-version: .ruby-version
           bundler-cache: true
           working-directory: backend
 
