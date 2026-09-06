@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'listaviva:device-id';
+const COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
 
-function readStoredDeviceId(): string | null {
+function readLocalStorage(): string | null {
   try {
     return window.localStorage.getItem(STORAGE_KEY);
   } catch {
@@ -8,7 +9,7 @@ function readStoredDeviceId(): string | null {
   }
 }
 
-function persistDeviceId(deviceId: string): void {
+function writeLocalStorage(deviceId: string): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, deviceId);
   } catch {
@@ -16,20 +17,34 @@ function persistDeviceId(deviceId: string): void {
   }
 }
 
+function readCookie(): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${STORAGE_KEY}=([^;]*)`));
+
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+function writeCookie(deviceId: string): void {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+
+  document.cookie = `${STORAGE_KEY}=${encodeURIComponent(deviceId)}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`;
+}
+
+function requestPersistentStorage(): void {
+  navigator.storage?.persist?.().catch(() => undefined);
+}
+
 let cached: string | null = null;
 
 export function deviceId(): string {
   if (cached) return cached;
 
-  const stored = readStoredDeviceId();
-  if (stored) {
-    cached = stored;
-    return stored;
-  }
+  const stored = readLocalStorage() ?? readCookie() ?? crypto.randomUUID();
 
-  const created = crypto.randomUUID();
-  persistDeviceId(created);
-  cached = created;
+  writeLocalStorage(stored);
+  writeCookie(stored);
+  requestPersistentStorage();
 
-  return created;
+  cached = stored;
+
+  return stored;
 }
