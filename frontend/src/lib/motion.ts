@@ -30,9 +30,9 @@ export const fadeUp: Variants = {
 };
 
 export const sheetItem: Variants = {
-  hidden: { opacity: 0, y: -6, scaleY: 0.96 },
-  visible: { opacity: 1, y: 0, scaleY: 1, transition: spring.snappy },
-  exit: { opacity: 0, x: -12, transition: transition.fast },
+  hidden: { opacity: 0, x: -5 },
+  visible: { opacity: 1, x: 0, transition: transition.fast },
+  exit: { opacity: 0, x: 5, transition: transition.fast },
 };
 
 export const staggerChildren = (stagger = 0.035): Transition => ({

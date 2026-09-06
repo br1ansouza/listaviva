@@ -25,7 +25,7 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
   return (
     <form
       onSubmit={submit}
-      className="flex items-center gap-3"
+      className="flex items-center gap-3 pr-1 pl-3"
       style={{ minHeight: 'var(--rule-height)' }}
     >
       <m.button
@@ -33,7 +33,7 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
         whileTap={{ scale: 0.85 }}
         transition={spring.snappy}
         aria-label="Adicionar item"
-        className="grid size-[22px] shrink-0 place-items-center rounded-md border border-dashed border-ink/30 text-ink-faint"
+        className="grid size-[22px] shrink-0 place-items-center rounded-md border border-dashed border-accent-list/70 bg-accent-list-soft/55 text-accent-list transition-colors hover:bg-accent-list-soft"
       >
         <Plus className="size-3.5" strokeWidth={3} />
       </m.button>
