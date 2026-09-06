@@ -25,8 +25,8 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           transition={spring.snappy}
           aria-label="Escolher ícone da lista"
           className={cn(
-            'grid size-12 shrink-0 place-items-center rounded-2xl border border-hairline bg-accent-list/60 text-ink',
-            'transition-colors hover:bg-accent-list',
+            'grid size-12 shrink-0 place-items-center rounded-2xl border border-accent-list/25 bg-accent-list-soft text-accent-list',
+            'shadow-sm transition-colors hover:border-accent-list/45',
             className,
           )}
         >
@@ -34,7 +34,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         </m.button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-[17.5rem] p-2">
+      <PopoverContent align="start" className="w-[17.5rem] rounded-2xl p-2.5">
         <div className="grid grid-cols-6 gap-1">
           {LIST_ICON_IDS.map((id) => {
             const Icon = iconById(id);
@@ -52,7 +52,9 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                 }}
                 className={cn(
                   'grid aspect-square place-items-center rounded-lg text-ink-soft transition-colors',
-                  selected ? 'bg-accent-list/70 text-ink' : 'hover:bg-muted hover:text-ink',
+                  selected
+                    ? 'bg-accent-list-soft text-accent-list'
+                    : 'hover:bg-muted hover:text-ink',
                 )}
               >
                 <Icon className="size-[18px]" />

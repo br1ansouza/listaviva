@@ -96,7 +96,7 @@ export function ShareDialog({ listId, open, onOpenChange, onShared }: ShareDialo
               href={share.whatsapp_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98]"
+              className="primary-action w-full px-5"
             >
               <MessageCircle className="size-4" />
               Enviar no WhatsApp
@@ -111,9 +111,9 @@ export function ShareDialog({ listId, open, onOpenChange, onShared }: ShareDialo
                 onClick={() => generate(duration.id)}
                 disabled={pending !== null}
                 className={cn(
-                  'flex items-center justify-between rounded-xl border border-hairline px-4 py-3 text-left transition-colors',
-                  'hover:border-transparent hover:bg-accent-list/60 disabled:opacity-60',
-                  pending === duration.id && 'border-transparent bg-accent-list/60',
+                  'flex items-center justify-between rounded-xl border border-hairline bg-surface px-4 py-3 text-left transition-colors',
+                  'hover:border-accent-list/30 hover:bg-accent-list-soft disabled:opacity-60',
+                  pending === duration.id && 'border-accent-list/40 bg-accent-list-soft',
                 )}
               >
                 <span className="text-sm font-medium text-ink">{duration.label}</span>

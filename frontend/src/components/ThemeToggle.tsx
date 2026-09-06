@@ -18,8 +18,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       transition={spring.snappy}
       aria-label={isDark ? 'Usar tema claro' : 'Usar tema escuro'}
       className={cn(
-        'relative grid size-10 place-items-center rounded-full border border-hairline bg-surface/70 text-ink-soft',
-        'transition-colors hover:text-ink',
+        'relative grid size-10 place-items-center rounded-full border border-hairline bg-surface/80 text-ink-soft shadow-sm',
+        'transition-colors hover:border-ink/20 hover:text-ink',
         className,
       )}
     >

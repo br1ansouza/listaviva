@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Mark } from '@/components/brand/Mark';
 import { api, type ListSummaryPayload } from '@/lib/api';
 import { remainingLabel } from '@/lib/expiry';
-import { accentStyle, iconById } from '@/lib/list-catalog';
+import { accentStyle, iconById, listTypeById } from '@/lib/list-catalog';
 import { fadeUp, staggerChildren } from '@/lib/motion';
 import { useColdStartHint } from '@/lib/use-cold-start';
 import { ShareDialog } from './ShareDialog';
@@ -82,25 +82,38 @@ export function HistoryPage() {
   }
 
   return (
-    <section className="pt-6">
-      <h1 className="hand-title text-4xl text-ink">Minhas listas</h1>
+    <section className="py-6 sm:py-9">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="hand-title text-4xl text-ink sm:text-5xl">Minhas listas</h1>
+          <p className="mt-1.5 text-sm text-ink-soft">Tudo que você criou neste aparelho.</p>
+        </div>
+        <Link
+          to="/nova"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95"
+          aria-label="Criar nova lista"
+        >
+          <Plus className="size-[18px]" />
+        </Link>
+      </div>
 
       <m.ul
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: staggerChildren(0.04) } }}
-        className="mt-5 space-y-2.5"
+        className="mt-6 space-y-2.5"
       >
         <AnimatePresence initial={false}>
           {lists.map((list) => {
             const Icon = iconById(list.icon);
             const expiry = remainingLabel(list.expires_at);
+            const definition = listTypeById(list.list_type);
 
             return (
-              <m.li key={list.id} layout variants={fadeUp} style={accentStyle(list.color)}>
-                <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface/60 p-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-list/70">
-                    <Icon className="size-5 text-ink" />
+              <m.li key={list.id} variants={fadeUp} style={accentStyle(list.color)}>
+                <div className="flex items-center gap-3 rounded-2xl border border-hairline border-l-[3px] border-l-accent-list bg-surface p-3 shadow-sm transition-shadow hover:shadow-md">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-list-soft text-accent-list">
+                    <Icon className="size-5" />
                   </span>
 
                   <Link to={`/lista/${list.id}`} className="min-w-0 flex-1">
@@ -108,6 +121,8 @@ export function HistoryPage() {
                       {list.title}
                     </span>
                     <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-faint">
+                      {definition.label}
+                      <span aria-hidden>·</span>
                       {list.items_count === 1 ? '1 item' : `${list.items_count} itens`}
                       {expiry && (
                         <>
@@ -123,7 +138,7 @@ export function HistoryPage() {
                     type="button"
                     onClick={() => setSharingId(list.id)}
                     aria-label={list.expired ? 'Gerar link novo' : 'Compartilhar lista'}
-                    className="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:bg-muted hover:text-ink"
+                    className="grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-surface-raised text-ink-soft transition-colors hover:border-ink/20 hover:text-ink"
                   >
                     <Share2 className="size-4" />
                   </button>

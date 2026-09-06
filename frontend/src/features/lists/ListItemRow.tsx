@@ -73,7 +73,7 @@ export function ListItemRow({
           initial={{ opacity: 0.55 }}
           animate={{ opacity: 0 }}
           transition={{ duration: 1.6, ease: easing.out }}
-          className="pointer-events-none absolute inset-y-0 -inset-x-2 rounded-lg bg-accent-list"
+          className="pointer-events-none absolute inset-x-1 inset-y-1 rounded-md bg-accent-list-soft"
         />
       )}
 
@@ -87,7 +87,9 @@ export function ListItemRow({
         aria-label={item.done ? 'Desmarcar item' : 'Marcar item como feito'}
         className={cn(
           'grid size-[22px] shrink-0 place-items-center rounded-md border transition-colors',
-          item.done ? 'border-transparent bg-accent-list' : 'border-ink/25 bg-transparent',
+          item.done
+            ? 'border-accent-list bg-accent-list'
+            : 'border-ink/25 bg-surface/70 hover:border-accent-list/70',
           readOnly && 'cursor-default opacity-70',
         )}
       >
@@ -96,7 +98,7 @@ export function ListItemRow({
           animate={{ opacity: item.done ? 1 : 0, scale: item.done ? 1 : 0.6 }}
           transition={spring.snappy}
         >
-          <Check className="size-3.5 text-ink" strokeWidth={3.5} />
+          <Check className="size-3.5 text-accent-list-foreground" strokeWidth={3.5} />
         </m.span>
       </m.button>
 
@@ -140,7 +142,7 @@ export function ListItemRow({
           type="button"
           onClick={onRemove}
           aria-label="Remover item"
-          className="grid size-7 shrink-0 place-items-center rounded-full text-ink-faint opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className="grid size-7 shrink-0 place-items-center rounded-full text-ink-faint opacity-45 transition-[opacity,color,background-color] hover:bg-muted hover:text-ink group-hover:opacity-100 focus-visible:opacity-100 sm:opacity-0"
         >
           <X className="size-4" />
         </button>
