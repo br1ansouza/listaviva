@@ -107,11 +107,31 @@ Cada tag `v*` publica a imagem do backend e um release com o bundle do frontend 
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
+## Deploy
+
+Automático. Todo push na `main` roda a CI e, se os dois jobs passarem, publica as duas pontas
+na ordem certa — backend primeiro, porque as migrations sobem no boot e o frontend não pode
+apontar para uma API que ainda não migrou.
+
+| Etapa | O que faz |
+|---|---|
+| `deploy-backend` | dispara o deploy no Render pela API, espera ficar `live` e confere `GET /up` |
+| `deploy-frontend` | builda com `PUBLIC_API_URL` e publica o Worker, depois confere `/` e `/historico` |
+
+O `PUBLIC_API_URL` entra em **build time** e também define a origem do WebSocket, então trocar a
+URL da API exige rebuild, não só redeploy.
+
+Segredos usados pelo workflow: `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `CLOUDFLARE_API_TOKEN` e
+`CLOUDFLARE_ACCOUNT_ID`.
+
 ## Manutenção
 
 O Dependabot abre PR agrupado toda segunda para as dependências do backend e do frontend, e
 mensalmente para as GitHub Actions e a imagem base do Docker. A CI roda Rubocop, Brakeman e
 bundler-audit no backend, e Biome, `tsc --noEmit` e build no frontend.
+
+Atualizações do frontend vindas do Dependabot **falham de propósito**: ele não regenera o
+`bun.lock`, e a CI roda `bun install --frozen-lockfile`. Essas sobem à mão, com o lock junto.
 
 ## Contribuindo
 
