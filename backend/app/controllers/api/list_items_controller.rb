@@ -9,28 +9,46 @@ module Api
     before_action :set_item, only: [ :update, :destroy ]
 
     def create
-      item = @list.list_items.create!(
-        item_params.merge(
-          created_by_device_id: device_id,
-          updated_by_device_id: device_id,
-          created_by_name: device_name,
-          updated_by_name: device_name,
-        ),
-      )
+      item = @list.with_lock do
+        authorize_access!(@list)
+        return if performed?
+        if @list.list_items.count >= ListItem::PER_LIST_LIMIT
+          return render_error(:unprocessable_content, "limite_de_itens")
+        end
+
+        @list.list_items.create!(
+          item_params.merge(
+            created_by_device_id: device_id,
+            updated_by_device_id: device_id,
+            created_by_name: device_name,
+            updated_by_name: device_name,
+          ),
+        )
+      end
       ListBroadcaster.item_created(item)
 
       render json: ListItemSerializer.call(item), status: :created
     end
 
     def update
-      @item.update!(item_params.merge(updated_by_device_id: device_id, updated_by_name: device_name))
+      @list.with_lock do
+        authorize_access!(@list)
+        return if performed?
+
+        @item.reload.update!(item_params.merge(updated_by_device_id: device_id, updated_by_name: device_name))
+      end
       ListBroadcaster.item_updated(@item)
 
       render json: ListItemSerializer.call(@item)
     end
 
     def destroy
-      @item.destroy!
+      @list.with_lock do
+        authorize_access!(@list)
+        return if performed?
+
+        @item.reload.destroy!
+      end
       ListBroadcaster.item_destroyed(@item)
 
       head :no_content
@@ -51,7 +69,7 @@ module Api
     end
 
     def item_params
-      params.require(:item).permit(:content, :done, :position, metadata: {})
+      params.expect(item: [ :content, :done, metadata: {} ])
     end
 
     def render_invalid(exception)

@@ -1,12 +1,14 @@
 module ApplicationCable
   class Connection < ActionCable::Connection::Base
-    identified_by :device_id, :share_token
+    identified_by :client_id
+    attr_reader :device_id, :share_token
 
     def connect
-      self.device_id = request.params[:device_id].presence
-      self.share_token = request.params[:share_token].presence
+      @device_id = request.params[:device_id].presence
+      @share_token = request.params[:share_token].presence
 
-      reject_unauthorized_connection if device_id.blank?
+      reject_unauthorized_connection unless DeviceIdentity.valid?(device_id)
+      self.client_id = SecureRandom.uuid
     end
   end
 end

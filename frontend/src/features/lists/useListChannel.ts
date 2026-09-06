@@ -14,6 +14,7 @@ export function useListChannel(listId: string | null, shareToken: string | null)
       listId,
       shareToken,
       onStatus: setStatus,
+      onRejected: () => useListStore.setState({ list: null, status: 'expired' }),
       onMessage: (message) => applyRemoteEvent(message as ListEvent),
     });
   }, [listId, shareToken, applyRemoteEvent]);

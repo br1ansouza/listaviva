@@ -69,7 +69,21 @@ export function subscribeToList({
         return;
       }
 
-      if (data.type === undefined && data.message !== undefined) onMessage(data.message);
+      if (data.type === undefined && data.message !== undefined) {
+        const message = data.message;
+        if (
+          message &&
+          typeof message === 'object' &&
+          'event' in message &&
+          message.event === 'access_revoked'
+        ) {
+          closed = true;
+          onRejected?.();
+          socket?.close();
+          return;
+        }
+        onMessage(message);
+      }
     });
 
     socket.addEventListener('close', () => {

@@ -1,4 +1,5 @@
 require_relative "boot"
+require_relative "../lib/request_limits"
 
 require "rails"
 require "active_model/railtie"
@@ -22,6 +23,6 @@ module Listaviva
 
     config.active_record.schema_format = :ruby
 
-    config.middleware.use Rack::Attack
+    config.middleware.insert_before Rails::Rack::Logger, RequestLimits
   end
 end

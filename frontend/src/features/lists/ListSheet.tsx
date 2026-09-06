@@ -2,8 +2,7 @@ import { AnimatePresence, m } from 'motion/react';
 import { useMemo } from 'react';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
-import type { ListItemPayload, ListPayload } from '@/lib/api';
-import { deviceId } from '@/lib/device';
+import { type ListItemPayload, type ListPayload, MAX_ITEMS_PER_LIST } from '@/lib/api';
 import { listAuthors } from '@/lib/list-authors';
 import {
   accentStyle,
@@ -51,18 +50,16 @@ export function ListSheet({
   const remaining = list.items.filter((item) => !item.done).length;
   const arrivingItemIds = useListStore((state) => state.arrivingItemIds);
   const itemRenderKeys = useListStore((state) => state.itemRenderKeys);
-  const myDeviceId = deviceId();
+  const myParticipantId = list.participant_id;
   const authors = useMemo(() => listAuthors(list.items, list.color), [list.items, list.color]);
 
   function byOther(item: ListItemPayload): boolean {
-    return item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId;
+    return item.created_by_id !== null && item.created_by_id !== myParticipantId;
   }
 
   function authorName(item: ListItemPayload): string | null {
     return (
-      item.created_by_name?.trim() ||
-      authors.get(item.created_by_device_id ?? '')?.fallbackName ||
-      null
+      item.created_by_name?.trim() || authors.get(item.created_by_id ?? '')?.fallbackName || null
     );
   }
 
@@ -71,7 +68,7 @@ export function ListSheet({
     const editor = item.updated_by_name?.trim();
     const base = author ? `Anotado por ${author}` : 'Anotado por outra pessoa';
 
-    if (editor && editor !== author && item.updated_by_device_id !== item.created_by_device_id) {
+    if (editor && editor !== author && item.updated_by_id !== item.created_by_id) {
       return `${base} · editado por ${editor}`;
     }
 
@@ -167,7 +164,7 @@ export function ListSheet({
                       item={item}
                       readOnly={readOnly}
                       byOther={byOther(item)}
-                      authorStyle={authors.get(item.created_by_device_id ?? '')?.style}
+                      authorStyle={authors.get(item.created_by_id ?? '')?.style}
                       authorLabel={authorLabel(item)}
                       authorName={authorName(item)}
                       arriving={arrivingItemIds.includes(item.id)}
@@ -182,7 +179,11 @@ export function ListSheet({
 
             {readOnly ? null : (
               <div className="list-rules shrink-0">
-                <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
+                <ItemComposer
+                  placeholder={definition.itemPlaceholder}
+                  onAdd={onAddItem}
+                  atLimit={list.items.length >= MAX_ITEMS_PER_LIST}
+                />
               </div>
             )}
           </div>

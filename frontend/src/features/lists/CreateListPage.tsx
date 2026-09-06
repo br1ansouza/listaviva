@@ -1,10 +1,18 @@
-import { ArrowRight, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, Check, Loader2, Trash2 } from 'lucide-react';
 import { m } from 'motion/react';
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { api } from '@/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ApiError, api, type ListDraft, type ListReplacement } from '@/lib/api';
 import {
   accentStyle,
   iconById,
@@ -29,6 +37,8 @@ export function CreateListPage() {
   const [touchedIcon, setTouchedIcon] = useState(false);
   const [touchedColor, setTouchedColor] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [replacement, setReplacement] = useState<ListReplacement | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<ListDraft | null>(null);
   const definition = listTypeById(listType);
 
   function selectType(next: ListTypeId) {
@@ -48,13 +58,35 @@ export function CreateListPage() {
       return;
     }
 
-    setSaving(true);
+    const draft = { title: trimmed, list_type: listType, icon, color };
+    setPendingDraft(draft);
+    await create(draft);
+  }
 
+  async function create(draft: ListDraft, confirmedReplacement?: ListReplacement) {
+    if (saving) return;
+    setSaving(true);
     try {
-      const list = await api.createList({ title: trimmed, list_type: listType, icon, color });
+      const list = await api.createList(draft, confirmedReplacement);
+      if (confirmedReplacement) toast.success('Lista antiga excluída. Nova lista criada.');
       navigate(`/lista/${list.id}`);
-    } catch {
-      toast.error('Não deu para criar agora. Tente de novo em instantes.');
+    } catch (error) {
+      if (error instanceof ApiError && error.oldestList) {
+        setReplacement(error.oldestList);
+        if (confirmedReplacement) {
+          toast.info('A lista antiga mudou. Confira os dados antes de confirmar novamente.');
+        }
+      } else {
+        setReplacement(null);
+        toast.error(
+          error instanceof ApiError && error.status === 429
+            ? 'Muitas tentativas de criação. Aguarde um pouco antes de tentar novamente.'
+            : confirmedReplacement
+              ? 'Não foi possível confirmar a criação. Confira seu histórico antes de tentar novamente.'
+              : 'Não deu para criar agora. Tente de novo em instantes.',
+        );
+      }
+    } finally {
       setSaving(false);
     }
   }
@@ -162,6 +194,57 @@ export function CreateListPage() {
       </m.form>
 
       <ListHistory variant="embedded" />
+
+      <Dialog
+        open={replacement !== null}
+        onOpenChange={(open) => {
+          if (!open && !saving) setReplacement(null);
+        }}
+      >
+        <DialogContent showCloseButton={!saving} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dar espaço para uma nova lista?</DialogTitle>
+            <DialogDescription>
+              Você atingiu o limite de 30 listas neste dispositivo. Para criar outra, pode excluir a
+              mais antiga. Nada será apagado sem sua confirmação.
+            </DialogDescription>
+          </DialogHeader>
+          {replacement ? (
+            <div className="min-w-0 rounded-xl border border-hairline bg-muted/50 px-4 py-3">
+              <p className="break-words text-sm font-semibold text-ink">{replacement.title}</p>
+              <p className="mt-1 text-xs text-ink-soft">
+                Criada em {new Date(replacement.created_at).toLocaleDateString('pt-BR')} ·{' '}
+                {replacement.items_count} {replacement.items_count === 1 ? 'item' : 'itens'}
+              </p>
+            </div>
+          ) : null}
+          <p className="text-sm text-ink-soft">
+            A lista e todos os seus itens serão excluídos permanentemente, inclusive para quem
+            recebeu o link. Essa ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => setReplacement(null)}
+              className="min-h-11 rounded-xl border border-hairline px-4 text-sm font-medium text-ink transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              Manter minhas listas
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                if (pendingDraft && replacement) void create(pendingDraft, replacement);
+              }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-destructive px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              {saving ? 'Substituindo...' : 'Excluir e criar nova'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

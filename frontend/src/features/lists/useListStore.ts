@@ -1,7 +1,13 @@
 import { create } from 'zustand';
 
-import { ApiError, api, type ListItemPayload, type ListPayload } from '@/lib/api';
-import { deviceId, readDeviceName } from '@/lib/device';
+import {
+  ApiError,
+  api,
+  type ListItemPayload,
+  type ListPayload,
+  MAX_ITEMS_PER_LIST,
+} from '@/lib/api';
+import { readDeviceName } from '@/lib/device';
 
 export type ListStatus =
   | 'idle'
@@ -13,7 +19,7 @@ export type ListStatus =
   | 'error';
 
 export interface ListEvent {
-  event: 'list_updated' | 'item_created' | 'item_updated' | 'item_destroyed';
+  event: 'list_updated' | 'item_created' | 'item_updated' | 'item_destroyed' | 'access_changed';
   payload: Record<string, unknown>;
 }
 
@@ -76,8 +82,12 @@ function withItem(
   return sortItems([...others, item]);
 }
 
-function optimisticTwinId(items: ListItemPayload[], item: ListItemPayload): string | undefined {
-  if (item.created_by_device_id !== deviceId()) return undefined;
+function optimisticTwinId(
+  items: ListItemPayload[],
+  item: ListItemPayload,
+  participantId: string,
+): string | undefined {
+  if (item.created_by_id !== participantId) return undefined;
 
   return items.find((current) => current.id.startsWith('temp-') && current.content === item.content)
     ?.id;
@@ -132,6 +142,7 @@ export const useListStore = create<ListState>((set, get) => ({
     const normalized = normalizeContent(content);
     if (!normalized) return;
     if (duplicateOf(list.items, normalized)) throw new DuplicateItemError();
+    if (list.items.length >= MAX_ITEMS_PER_LIST) throw new ApiError(422, 'limite_de_itens');
 
     const optimisticId = `temp-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
@@ -142,8 +153,8 @@ export const useListStore = create<ListState>((set, get) => ({
       done: false,
       position: (list.items.at(-1)?.position ?? 0) + 1,
       metadata: null,
-      created_by_device_id: deviceId(),
-      updated_by_device_id: deviceId(),
+      created_by_id: list.participant_id,
+      updated_by_id: list.participant_id,
       created_by_name: readDeviceName(),
       updated_by_name: readDeviceName(),
       created_at: now,
@@ -258,6 +269,7 @@ export const useListStore = create<ListState>((set, get) => ({
   applyRemoteEvent: ({ event, payload }) => {
     const list = get().list;
     if (!list) return;
+    if (event === 'access_changed') return;
 
     if (event === 'list_updated') {
       set({ list: { ...list, ...(payload as Partial<ListPayload>) } });
@@ -271,9 +283,9 @@ export const useListStore = create<ListState>((set, get) => ({
 
     const item = payload as unknown as ListItemPayload;
     const exists = list.items.some((current) => current.id === item.id);
-    const twinId = optimisticTwinId(list.items, item);
+    const twinId = optimisticTwinId(list.items, item, list.participant_id);
 
-    if (!exists && item.created_by_device_id !== deviceId()) {
+    if (!exists && item.created_by_id !== list.participant_id) {
       set({ arrivingItemIds: [...get().arrivingItemIds, item.id] });
       setTimeout(() => {
         set({ arrivingItemIds: get().arrivingItemIds.filter((id) => id !== item.id) });

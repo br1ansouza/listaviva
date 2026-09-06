@@ -4,14 +4,29 @@ module Api
 
     PERSONALIZATION_FIELDS = %w[icon color list_type].freeze
 
-    before_action :require_device_id!, except: [ :by_token ]
     before_action :set_list, only: [ :show, :update, :share ]
     before_action :authorize_list_access!, only: [ :show, :update ]
 
     def create
-      list = List.create!(list_params.merge(creator_device_id: device_id))
+      list, replaced = ListCreation.call(
+        list_params,
+        device_id: device_id,
+        replacement_id: params[:replace_list_id],
+        replacement_version: params[:replace_list_version],
+      )
+      ListBroadcaster.broadcast(replaced, "access_changed", { id: replaced.id }) if replaced
 
       render json: ListSerializer.call(list, device_id: device_id), status: :created
+    rescue ListCreation::LimitReached => exception
+      oldest = exception.oldest
+      render json: {
+        error: "limite_de_listas",
+        limit: List::DEVICE_LIMIT,
+        oldest_list: {
+          id: oldest.id, title: oldest.title, created_at: oldest.created_at,
+          items_count: oldest.list_items.count, version: oldest.updated_at.iso8601(6)
+        }
+      }, status: :conflict
     end
 
     def show
@@ -42,6 +57,7 @@ module Api
       return render_error(:unprocessable_content, "validade_invalida") unless List::SHARE_DURATIONS.key?(duration)
 
       @list.share!(duration)
+      ListBroadcaster.broadcast(@list, "access_changed", { id: @list.id })
 
       render json: ListSerializer.call(@list, device_id: device_id).merge(
         share_url: share_url_for(@list),
@@ -70,7 +86,7 @@ module Api
     end
 
     def list_params
-      params.require(:list).permit(:title, :list_type, :icon, :color)
+      params.expect(list: [ :title, :list_type, :icon, :color ])
     end
 
     def personalization_requested?
