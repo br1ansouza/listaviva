@@ -13,6 +13,8 @@ interface ListItemRowProps {
   readOnly?: boolean;
   byOther?: boolean;
   authorLabel?: string;
+  authorName?: string | null;
+  showAuthor?: boolean;
   arriving?: boolean;
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
@@ -24,6 +26,8 @@ export function ListItemRow({
   readOnly = false,
   byOther = false,
   authorLabel,
+  authorName,
+  showAuthor = false,
   arriving = false,
   onToggle,
   onRename,
@@ -63,20 +67,10 @@ export function ListItemRow({
       style={{ minHeight: 'var(--rule-height)' }}
     >
       {byOther ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={authorLabel}
-              className="-translate-y-1/2 absolute top-1/2 left-0 grid h-full w-3 place-items-center"
-            >
-              <span className="h-[1.05em] w-[3px] rounded-full bg-accent-list" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left" align="center">
-            {authorLabel}
-          </TooltipContent>
-        </Tooltip>
+        <span
+          aria-hidden
+          className="-translate-y-1/2 absolute top-1/2 left-0 h-[1.05em] w-[3px] rounded-full bg-accent-list"
+        />
       ) : null}
 
       {arriving && (
@@ -148,6 +142,23 @@ export function ListItemRow({
           </span>
         </button>
       )}
+
+      {showAuthor && !editing ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={authorLabel}
+              className="max-w-[6.5rem] shrink-0 truncate rounded-full bg-accent-list-soft px-2 py-0.5 text-[0.68rem] font-medium text-ink-soft"
+            >
+              {authorName ?? 'outra pessoa'}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" align="end">
+            {authorLabel}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
 
       {!readOnly && (
         <button

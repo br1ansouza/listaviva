@@ -58,10 +58,11 @@ export function LiveRoomPage() {
   }
 
   return (
-    <div className="pt-4">
+    <div className="flex min-h-0 flex-1 flex-col pt-4 sm:block">
       <ListSheet
         list={list}
         editable
+        customizable={list.is_creator}
         onAddItem={(content) => report(addItem(content))}
         onToggleItem={(itemId, done) => report(toggleItem(itemId, done))}
         onRenameItem={(itemId, content) => report(renameItem(itemId, content))}
@@ -71,7 +72,9 @@ export function LiveRoomPage() {
         onChangeColor={(color) => report(updateList({ color }))}
       />
 
-      <ConnectionState status={connection} coldStart={coldStart} />
+      <div className="shrink-0">
+        <ConnectionState status={connection} coldStart={coldStart} />
+      </div>
     </div>
   );
 }

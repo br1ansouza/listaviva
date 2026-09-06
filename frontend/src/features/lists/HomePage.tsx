@@ -1,10 +1,17 @@
 import { ArrowRight, Check, History } from 'lucide-react';
 import { m } from 'motion/react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router';
 
 import { fadeUp, staggerChildren, transition } from '@/lib/motion';
 
+const TermsDialog = lazy(() =>
+  import('@/features/legal/TermsDialog').then((module) => ({ default: module.TermsDialog })),
+);
+
 export function HomePage() {
+  const [termsOpen, setTermsOpen] = useState(false);
+
   return (
     <m.section
       initial="hidden"
@@ -103,6 +110,25 @@ export function HomePage() {
           </div>
         </div>
       </m.div>
+      <m.footer
+        variants={fadeUp}
+        className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[0.78rem] text-ink-faint"
+      >
+        <span>Feito por Brian, sem cadastro e sem anúncio.</span>
+        <button
+          type="button"
+          onClick={() => setTermsOpen(true)}
+          className="rounded-full underline underline-offset-4 transition-colors hover:text-ink"
+        >
+          Termos de uso e contato
+        </button>
+      </m.footer>
+
+      {termsOpen && (
+        <Suspense fallback={null}>
+          <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />
+        </Suspense>
+      )}
     </m.section>
   );
 }
