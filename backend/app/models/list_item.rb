@@ -5,6 +5,7 @@ class ListItem < ApplicationRecord
 
   validates :content, presence: true, length: { maximum: 500 }
   validates :updated_by_device_id, length: { maximum: 64 }, allow_nil: true
+  validates :created_by_device_id, length: { maximum: 64 }, allow_nil: true
   validate :metadata_within_limit
 
   before_validation :assign_position, on: :create
