@@ -20,7 +20,7 @@ export function ConnectionState({ status, coldStart }: ConnectionStateProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
           transition={transition.base}
-          className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2.5 rounded-full border border-hairline bg-surface/95 px-4 py-2 shadow-sm backdrop-blur"
+          className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2.5 rounded-full border border-hairline bg-surface-raised/95 px-4 py-2.5 shadow-lg backdrop-blur"
         >
           <Mark animated className="size-4 text-ink-soft" />
           <span className="text-xs text-ink-soft">

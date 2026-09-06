@@ -28,12 +28,13 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
             role="radio"
             aria-checked={selected}
             aria-label={color.label}
+            title={color.label}
             onClick={() => onChange(color.id)}
             whileTap={{ scale: 0.88 }}
             transition={spring.snappy}
             className={cn(
-              'grid size-9 place-items-center rounded-full ring-offset-2 ring-offset-paper transition-shadow',
-              selected ? 'ring-2 ring-ink/35' : 'ring-1 ring-hairline hover:ring-ink/20',
+              'grid size-9 place-items-center rounded-full border-2 border-surface-raised shadow-sm ring-offset-2 ring-offset-surface transition-[box-shadow,transform]',
+              selected ? 'ring-2 ring-ink/45' : 'hover:scale-105 hover:ring-2 hover:ring-ink/15',
             )}
             style={{ backgroundColor: color.token }}
           >
@@ -43,7 +44,10 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={transition.fast}
               >
-                <Check className="size-4 text-ink/70" strokeWidth={3} />
+                <Check
+                  className="size-4 text-[oklch(0.16_0.02_158)] drop-shadow-sm"
+                  strokeWidth={3.25}
+                />
               </m.span>
             )}
           </m.button>

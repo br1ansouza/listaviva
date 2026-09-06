@@ -80,11 +80,11 @@ export function ListPage() {
       />
 
       {list.is_creator && (
-        <div className="mt-10 flex items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3 px-1">
           <button
             type="button"
             onClick={() => setShareOpen(true)}
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98]"
+            className="primary-action flex-1 px-6"
           >
             <Share2 className="size-4" />
             {list.share_token ? 'Compartilhar de novo' : 'Compartilhar'}

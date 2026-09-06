@@ -26,7 +26,7 @@ export function ColorPickerPopover({ value, onChange, className }: ColorPickerPo
           transition={spring.snappy}
           aria-label="Escolher cor da lista"
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:text-ink',
+            'grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-surface/80 text-ink-soft shadow-sm transition-colors hover:border-ink/20 hover:text-ink',
             className,
           )}
         >
@@ -34,14 +34,14 @@ export function ColorPickerPopover({ value, onChange, className }: ColorPickerPo
             <Palette className="size-[18px]" />
             <span
               aria-hidden
-              className="absolute -right-1 -bottom-1 size-2.5 rounded-full ring-2 ring-surface"
+              className="absolute -right-1 -bottom-1 size-2.5 rounded-full ring-2 ring-surface-raised"
               style={{ backgroundColor: colorToken(value) }}
             />
           </span>
         </m.button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-auto p-3">
+      <PopoverContent align="end" className="w-auto rounded-2xl p-3.5">
         <ColorPicker
           value={value}
           onChange={(color) => {

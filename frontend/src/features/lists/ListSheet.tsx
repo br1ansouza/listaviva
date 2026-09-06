@@ -48,77 +48,89 @@ export function ListSheet({
   const myDeviceId = deviceId();
 
   return (
-    <section style={accentStyle(list.color)} className="pt-2">
-      <div className="flex items-center gap-3 rounded-2xl bg-accent-list/70 px-3 py-2.5">
-        {editable && onChangeIcon ? (
-          <IconPicker
-            value={list.icon as ListIconId}
-            onChange={onChangeIcon}
-            className="size-10 rounded-xl border-transparent bg-surface/50"
-          />
-        ) : (
-          <Icon className="size-6 shrink-0 text-ink" />
-        )}
+    <section style={accentStyle(list.color)} className="pt-2 sm:pt-5">
+      <div className="overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[var(--shadow-panel)]">
+        <div className="h-1 bg-accent-list" />
 
-        {editable && onRenameList ? (
-          <input
-            defaultValue={list.title}
-            maxLength={120}
-            aria-label="Título da lista"
-            onBlur={(event) => {
-              const trimmed = event.target.value.trim();
-              if (!trimmed) {
-                event.target.value = list.title;
-                return;
-              }
-              if (trimmed !== list.title) onRenameList(trimmed);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') event.currentTarget.blur();
-            }}
-            className="hand-title min-w-0 flex-1 bg-transparent text-3xl text-ink outline-none"
-          />
-        ) : (
-          <h1 className="hand-title min-w-0 flex-1 truncate text-3xl text-ink">{list.title}</h1>
-        )}
+        <div className="bg-accent-list-soft px-4 py-4 sm:px-5">
+          <div className="flex items-center gap-3">
+            {editable && onChangeIcon ? (
+              <IconPicker
+                value={list.icon as ListIconId}
+                onChange={onChangeIcon}
+                className="size-11 rounded-xl"
+              />
+            ) : (
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-list text-accent-list-foreground">
+                <Icon className="size-5" />
+              </span>
+            )}
+
+            {editable && onRenameList ? (
+              <input
+                key={list.title}
+                defaultValue={list.title}
+                maxLength={120}
+                aria-label="Título da lista"
+                onBlur={(event) => {
+                  const trimmed = event.target.value.trim();
+                  if (!trimmed) {
+                    event.target.value = list.title;
+                    return;
+                  }
+                  if (trimmed !== list.title) onRenameList(trimmed);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') event.currentTarget.blur();
+                }}
+                className="hand-title min-w-0 flex-1 bg-transparent text-[2rem] text-ink outline-none"
+              />
+            ) : (
+              <h1 className="hand-title min-w-0 flex-1 truncate text-[2rem] text-ink">
+                {list.title}
+              </h1>
+            )}
+
+            {editable && onChangeColor ? (
+              <ColorPickerPopover value={list.color as ListColor} onChange={onChangeColor} />
+            ) : null}
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-3 pl-0.5 text-[0.68rem] font-medium text-ink-faint">
+            <span>{definition.label}</span>
+            <span>{remaining === 0 ? 'tudo riscado' : `${remaining} por fazer`}</span>
+          </div>
+        </div>
+
+        <div className="list-rules bg-surface px-3 sm:px-5">
+          <m.ul
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: staggerChildren(0.03) } }}
+          >
+            <AnimatePresence initial={false}>
+              {list.items.map((item) => (
+                <ListItemRow
+                  key={item.id}
+                  item={item}
+                  readOnly={readOnly}
+                  byOther={
+                    item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId
+                  }
+                  arriving={arrivingItemIds.includes(item.id)}
+                  onToggle={(done) => onToggleItem(item.id, done)}
+                  onRename={(content) => onRenameItem(item.id, content)}
+                  onRemove={() => onRemoveItem(item.id)}
+                />
+              ))}
+            </AnimatePresence>
+          </m.ul>
+
+          {readOnly ? null : (
+            <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
+          )}
+        </div>
       </div>
-
-      <div className="mt-1.5 flex items-center justify-end gap-1 px-1">
-        <span className="text-xs text-ink-faint">
-          {remaining === 0 ? 'tudo feito' : `${remaining} restantes`}
-        </span>
-        {editable && onChangeColor ? (
-          <ColorPickerPopover value={list.color as ListColor} onChange={onChangeColor} />
-        ) : null}
-      </div>
-
-      <m.ul
-        initial="hidden"
-        animate="visible"
-        variants={{ visible: { transition: staggerChildren(0.03) } }}
-        className="mt-4"
-      >
-        <AnimatePresence initial={false}>
-          {list.items.map((item) => (
-            <ListItemRow
-              key={item.id}
-              item={item}
-              readOnly={readOnly}
-              byOther={
-                item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId
-              }
-              arriving={arrivingItemIds.includes(item.id)}
-              onToggle={(done) => onToggleItem(item.id, done)}
-              onRename={(content) => onRenameItem(item.id, content)}
-              onRemove={() => onRemoveItem(item.id)}
-            />
-          ))}
-        </AnimatePresence>
-      </m.ul>
-
-      {readOnly ? null : (
-        <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
-      )}
     </section>
   );
 }

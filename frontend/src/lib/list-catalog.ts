@@ -10,6 +10,7 @@ import {
   Heart,
   Home,
   Landmark,
+  Lightbulb,
   ListTodo,
   type LucideIcon,
   Palmtree,
@@ -26,7 +27,7 @@ import {
 
 export type ListColor = 'coral' | 'mint' | 'lavender' | 'butter' | 'sky' | 'blush';
 
-export type ListTypeId = 'todo' | 'shopping';
+export type ListTypeId = 'todo' | 'shopping' | 'event' | 'meals' | 'ideas';
 
 export interface ListTypeDefinition {
   id: ListTypeId;
@@ -35,15 +36,51 @@ export interface ListTypeDefinition {
   defaultIcon: ListIconId;
   defaultColor: ListColor;
   itemPlaceholder: string;
+  titlePlaceholder: string;
 }
 
-export const LIST_COLORS: { id: ListColor; label: string; token: string }[] = [
-  { id: 'coral', label: 'Coral', token: 'var(--list-coral)' },
-  { id: 'mint', label: 'Menta', token: 'var(--list-mint)' },
-  { id: 'lavender', label: 'Lavanda', token: 'var(--list-lavender)' },
-  { id: 'butter', label: 'Manteiga', token: 'var(--list-butter)' },
-  { id: 'sky', label: 'Céu', token: 'var(--list-sky)' },
-  { id: 'blush', label: 'Blush', token: 'var(--list-blush)' },
+export const LIST_COLORS: {
+  id: ListColor;
+  label: string;
+  token: string;
+  softToken: string;
+}[] = [
+  {
+    id: 'coral',
+    label: 'Coral',
+    token: 'var(--list-coral)',
+    softToken: 'var(--list-coral-soft)',
+  },
+  {
+    id: 'mint',
+    label: 'Menta',
+    token: 'var(--list-mint)',
+    softToken: 'var(--list-mint-soft)',
+  },
+  {
+    id: 'lavender',
+    label: 'Violeta',
+    token: 'var(--list-lavender)',
+    softToken: 'var(--list-lavender-soft)',
+  },
+  {
+    id: 'butter',
+    label: 'Âmbar',
+    token: 'var(--list-butter)',
+    softToken: 'var(--list-butter-soft)',
+  },
+  {
+    id: 'sky',
+    label: 'Azul',
+    token: 'var(--list-sky)',
+    softToken: 'var(--list-sky-soft)',
+  },
+  {
+    id: 'blush',
+    label: 'Rosa',
+    token: 'var(--list-blush)',
+    softToken: 'var(--list-blush-soft)',
+  },
 ];
 
 export const LIST_ICONS = {
@@ -69,6 +106,7 @@ export const LIST_ICONS = {
   landmark: Landmark,
   'calendar-check': CalendarCheck,
   sparkles: Sparkles,
+  lightbulb: Lightbulb,
 } satisfies Record<string, LucideIcon>;
 
 export type ListIconId = keyof typeof LIST_ICONS;
@@ -78,19 +116,48 @@ export const LIST_ICON_IDS = Object.keys(LIST_ICONS) as ListIconId[];
 export const LIST_TYPES: ListTypeDefinition[] = [
   {
     id: 'todo',
-    label: 'To-do',
-    hint: 'Tarefas para riscar',
+    label: 'Tarefas',
+    hint: 'Pendências e rotina',
     defaultIcon: 'list-todo',
     defaultColor: 'sky',
     itemPlaceholder: 'O que precisa ser feito?',
+    titlePlaceholder: 'Ex.: Coisas de hoje',
   },
   {
     id: 'shopping',
     label: 'Compras',
-    hint: 'Mercado e feira',
+    hint: 'Mercado, feira e mais',
     defaultIcon: 'shopping-cart',
     defaultColor: 'mint',
     itemPlaceholder: 'O que falta comprar?',
+    titlePlaceholder: 'Ex.: Mercado da semana',
+  },
+  {
+    id: 'event',
+    label: 'Evento',
+    hint: 'Festa, rolê ou encontro',
+    defaultIcon: 'party',
+    defaultColor: 'blush',
+    itemPlaceholder: 'O que falta combinar?',
+    titlePlaceholder: 'Ex.: Aniversário da Ana',
+  },
+  {
+    id: 'meals',
+    label: 'Refeições',
+    hint: 'Cardápio e pedidos',
+    defaultIcon: 'utensils',
+    defaultColor: 'butter',
+    itemPlaceholder: 'O que vai ter?',
+    titlePlaceholder: 'Ex.: Almoço de domingo',
+  },
+  {
+    id: 'ideas',
+    label: 'Ideias',
+    hint: 'Planos e referências',
+    defaultIcon: 'lightbulb',
+    defaultColor: 'lavender',
+    itemPlaceholder: 'Qual é a próxima ideia?',
+    titlePlaceholder: 'Ex.: Próximo projeto',
   },
 ];
 
@@ -110,5 +177,10 @@ export function colorToken(id: string): string {
 }
 
 export function accentStyle(color: string): React.CSSProperties {
-  return { ['--accent-list' as string]: colorToken(color) };
+  const definition = LIST_COLORS.find((item) => item.id === color);
+
+  return {
+    ['--accent-list' as string]: definition?.token ?? `var(--list-${FALLBACK_COLOR})`,
+    ['--accent-list-soft' as string]: definition?.softToken ?? `var(--list-${FALLBACK_COLOR}-soft)`,
+  };
 }
