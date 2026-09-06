@@ -1,6 +1,7 @@
 import { AnimatePresence, m } from 'motion/react';
 
-import type { ListPayload } from '@/lib/api';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import type { ListItemPayload, ListPayload } from '@/lib/api';
 import { deviceId } from '@/lib/device';
 import {
   accentStyle,
@@ -46,6 +47,18 @@ export function ListSheet({
   const remaining = list.items.filter((item) => !item.done).length;
   const arrivingItemIds = useListStore((state) => state.arrivingItemIds);
   const myDeviceId = deviceId();
+
+  function authorLabel(item: ListItemPayload): string {
+    const author = item.created_by_name?.trim();
+    const editor = item.updated_by_name?.trim();
+    const base = author ? `Anotado por ${author}` : 'Anotado por outra pessoa';
+
+    if (editor && editor !== author && item.updated_by_device_id !== item.created_by_device_id) {
+      return `${base} · editado por ${editor}`;
+    }
+
+    return base;
+  }
 
   return (
     <section style={accentStyle(list.color)} className="pt-2 sm:pt-5">
@@ -102,34 +115,42 @@ export function ListSheet({
           </div>
         </div>
 
-        <div className="list-rules bg-surface px-3 sm:px-5">
-          <m.ul
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: staggerChildren(0.03) } }}
-          >
-            <AnimatePresence initial={false}>
-              {list.items.map((item) => (
-                <ListItemRow
-                  key={item.id}
-                  item={item}
-                  readOnly={readOnly}
-                  byOther={
-                    item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId
-                  }
-                  arriving={arrivingItemIds.includes(item.id)}
-                  onToggle={(done) => onToggleItem(item.id, done)}
-                  onRename={(content) => onRenameItem(item.id, content)}
-                  onRemove={() => onRemoveItem(item.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </m.ul>
+        <TooltipProvider delayDuration={200}>
+          <div className="bg-surface px-3 sm:px-5">
+            <div className="list-rules sheet-scroll max-h-[70svh] overflow-y-auto sm:max-h-[55svh]">
+              <m.ul
+                initial="hidden"
+                animate="visible"
+                variants={{ visible: { transition: staggerChildren(0.03) } }}
+              >
+                <AnimatePresence initial={false}>
+                  {list.items.map((item) => (
+                    <ListItemRow
+                      key={item.id}
+                      item={item}
+                      readOnly={readOnly}
+                      byOther={
+                        item.created_by_device_id !== null &&
+                        item.created_by_device_id !== myDeviceId
+                      }
+                      authorLabel={authorLabel(item)}
+                      arriving={arrivingItemIds.includes(item.id)}
+                      onToggle={(done) => onToggleItem(item.id, done)}
+                      onRename={(content) => onRenameItem(item.id, content)}
+                      onRemove={() => onRemoveItem(item.id)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </m.ul>
+            </div>
 
-          {readOnly ? null : (
-            <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
-          )}
-        </div>
+            {readOnly ? null : (
+              <div className="list-rules">
+                <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />
+              </div>
+            )}
+          </div>
+        </TooltipProvider>
       </div>
     </section>
   );

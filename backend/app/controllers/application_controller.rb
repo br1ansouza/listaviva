@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::API
   DEVICE_ID_HEADER = "HTTP_X_DEVICE_ID".freeze
   SHARE_TOKEN_HEADER = "HTTP_X_SHARE_TOKEN".freeze
+  DEVICE_NAME_HEADER = "HTTP_X_DEVICE_NAME".freeze
 
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_invalid
@@ -14,6 +15,13 @@ class ApplicationController < ActionController::API
 
   def share_token
     @share_token ||= request.get_header(SHARE_TOKEN_HEADER).presence
+  end
+
+  def device_name
+    return @device_name if defined?(@device_name)
+
+    raw = request.get_header(DEVICE_NAME_HEADER).presence
+    @device_name = raw && CGI.unescape(raw).grapheme_clusters.first(ListItem::AUTHOR_NAME_LIMIT).join.strip.presence
   end
 
   def require_device_id!

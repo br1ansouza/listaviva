@@ -1,13 +1,13 @@
 import { Clock, Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { toast } from 'sonner';
 import { ConnectionState } from '@/components/ConnectionState';
 import { remainingLabel } from '@/lib/expiry';
 import type { ListColor, ListIconId } from '@/lib/list-catalog';
 import { useColdStartHint } from '@/lib/use-cold-start';
 import { ExpiredList } from './ExpiredList';
 import { ListSheet } from './ListSheet';
+import { report } from './report';
 import { ShareDialog } from './ShareDialog';
 import { useListChannel } from './useListChannel';
 import { useListStore } from './useListStore';
@@ -32,10 +32,6 @@ export function ListPage() {
     if (id) loadById(id);
     return reset;
   }, [id, loadById, reset]);
-
-  function report(action: Promise<void>) {
-    action.catch(() => toast.error('A mudança não foi salva. Tente de novo.'));
-  }
 
   if (waiting) {
     return (
