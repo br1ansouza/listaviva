@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+if [ -d "$repo_root/frontend/node_modules" ]; then
+  echo "→ frontend: build"
+  (cd "$repo_root/frontend" && bun run build >/dev/null)
+fi

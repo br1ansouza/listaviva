@@ -1,0 +1,24 @@
+module ListSerializer
+  module_function
+
+  def call(list, device_id: nil)
+    {
+      id: list.id,
+      title: list.title,
+      list_type: list.list_type,
+      icon: list.icon,
+      color: list.color,
+      share_token: list.share_token,
+      expires_at: list.expires_at,
+      expired: list.expired?,
+      is_creator: list.created_by?(device_id),
+      created_at: list.created_at,
+      updated_at: list.updated_at,
+      items: list.list_items.map { |item| ListItemSerializer.call(item) }
+    }
+  end
+
+  def summary(list, device_id: nil)
+    call(list, device_id: device_id).except(:items).merge(items_count: list.list_items.size)
+  end
+end
