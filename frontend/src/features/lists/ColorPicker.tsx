@@ -14,7 +14,7 @@ interface ColorPickerProps {
 export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
   return (
     <div
-      className={cn('flex flex-wrap items-center gap-2.5', className)}
+      className={cn('flex flex-wrap items-center gap-2 sm:gap-2.5', className)}
       role="radiogroup"
       aria-label="Cor da lista"
     >
@@ -30,10 +30,37 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
             aria-label={color.label}
             title={color.label}
             onClick={() => onChange(color.id)}
+            tabIndex={selected ? 0 : -1}
+            onKeyDown={(event) => {
+              const directions: Record<string, number> = {
+                ArrowRight: 1,
+                ArrowDown: 1,
+                ArrowLeft: -1,
+                ArrowUp: -1,
+              };
+              const direction = directions[event.key];
+              if (direction === undefined && event.key !== 'Home' && event.key !== 'End') return;
+              event.preventDefault();
+              const index = LIST_COLORS.findIndex((entry) => entry.id === color.id);
+              const nextIndex =
+                event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? LIST_COLORS.length - 1
+                    : (index + (direction ?? 0) + LIST_COLORS.length) % LIST_COLORS.length;
+              const next = LIST_COLORS[nextIndex];
+              if (!next) return;
+              onChange(next.id);
+              const buttons =
+                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                  '[role="radio"]',
+                );
+              buttons?.[nextIndex]?.focus();
+            }}
             whileTap={{ scale: 0.88 }}
             transition={spring.snappy}
             className={cn(
-              'grid size-9 place-items-center rounded-full border-2 border-surface-raised shadow-sm ring-offset-2 ring-offset-surface transition-[box-shadow,transform]',
+              'grid size-8 place-items-center rounded-full border-2 border-surface-raised shadow-sm ring-offset-2 ring-offset-surface transition-[background-color,border-color,box-shadow,transform] sm:size-9',
               selected ? 'ring-2 ring-ink/45' : 'hover:scale-105 hover:ring-2 hover:ring-ink/15',
             )}
             style={{ backgroundColor: color.token }}

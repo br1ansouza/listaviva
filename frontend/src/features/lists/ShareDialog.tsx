@@ -67,7 +67,9 @@ export function ShareDialog({ listId, open, onOpenChange, onShared }: ShareDialo
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="hand-title text-3xl">Compartilhar lista</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Compartilhar lista
+          </DialogTitle>
           <DialogDescription>
             {share
               ? 'Quem abrir o link edita a lista junto com você, ao vivo.'
