@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="site-header sticky top-0 z-40">
         <div
           className={cn(
-            'mx-auto flex w-full max-w-3xl items-center gap-2 px-4 sm:h-[4.25rem] sm:px-6',
+            'mx-auto flex w-full max-w-5xl items-center gap-2 px-5 sm:h-[4.25rem] sm:px-8',
             isListRoute ? 'h-12' : 'h-[4.25rem]',
           )}
         >
@@ -65,10 +65,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={cn('flex items-center gap-2.5 text-ink', isListRoute && 'max-sm:hidden')}
             aria-label="Início"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-brand/10 text-ink">
+            <span className="grid size-9 place-items-center rounded-xl border border-hairline bg-surface text-ink">
               <Mark className="size-6" />
             </span>
-            <span className="hand-title text-[1.85rem] leading-none">ListaViva</span>
+            <span
+              className={cn(
+                'text-[1.1rem] leading-none font-semibold tracking-[-0.045em]',
+                !isHome && 'max-[380px]:hidden',
+              )}
+            >
+              ListaViva<span className="text-brand">.</span>
+            </span>
           </Link>
 
           <div className={cn('ml-auto flex items-center gap-2', isListRoute && 'max-sm:hidden')}>
@@ -106,8 +113,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         animate={{ opacity: 1 }}
         transition={transition.fast}
         className={cn(
-          'main-stage relative z-10 mx-auto w-full max-w-3xl px-4 sm:px-6 sm:pb-24',
-          isListRoute ? 'flex min-h-0 flex-col pb-4 sm:block' : 'pb-24',
+          'main-stage relative z-10 mx-auto w-full px-5 sm:px-8 sm:pb-12',
+          isHome || location.pathname === '/nova' ? 'max-w-5xl' : 'max-w-3xl',
+          isHome
+            ? 'flex flex-col pb-0 sm:pb-0'
+            : isListRoute
+              ? 'flex min-h-0 flex-col pb-4 sm:block'
+              : 'pb-24',
         )}
       >
         {children}

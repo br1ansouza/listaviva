@@ -44,7 +44,7 @@ export default defineConfig({
       },
       {
         tag: 'meta',
-        attrs: { name: 'theme-color', content: '#0D1712', media: '(prefers-color-scheme: dark)' },
+        attrs: { name: 'theme-color', content: '#141516', media: '(prefers-color-scheme: dark)' },
       },
       { tag: 'meta', attrs: { name: 'apple-mobile-web-app-capable', content: 'yes' } },
       { tag: 'meta', attrs: { name: 'apple-mobile-web-app-title', content: 'ListaViva' } },

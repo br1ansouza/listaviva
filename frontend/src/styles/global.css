@@ -10,12 +10,12 @@
   --paper-edge: oklch(0.925 0.018 96);
   --surface: oklch(0.995 0.006 96);
   --surface-raised: oklch(1 0 0);
-  --ink: oklch(0.22 0.02 155);
-  --ink-soft: oklch(0.46 0.025 155);
-  --ink-faint: oklch(0.61 0.02 155);
+  --ink: oklch(0.24 0.008 85);
+  --ink-soft: oklch(0.46 0.008 85);
+  --ink-faint: oklch(0.51 0.008 85);
   --rule-line: oklch(0.35 0.035 225 / 0.11);
   --rule-margin: oklch(0.62 0.17 28 / 0.28);
-  --hairline: oklch(0.25 0.02 155 / 0.12);
+  --hairline: oklch(0.25 0.008 85 / 0.14);
   --brand: oklch(0.57 0.145 158);
   --shadow-panel: 0 1px 2px oklch(0.22 0.02 155 / 0.05), 0 10px 26px oklch(0.22 0.02 155 / 0.055);
   --shadow-button: 0 1px 2px oklch(0.16 0.02 158 / 0.16);
@@ -62,44 +62,44 @@
 }
 
 .dark {
-  --paper: oklch(0.155 0.018 158);
-  --paper-edge: oklch(0.12 0.014 158);
-  --surface: oklch(0.195 0.02 158);
-  --surface-raised: oklch(0.225 0.022 158);
-  --ink: oklch(0.95 0.01 150);
-  --ink-soft: oklch(0.75 0.018 150);
-  --ink-faint: oklch(0.58 0.018 150);
-  --rule-line: oklch(0.78 0.035 225 / 0.105);
-  --rule-margin: oklch(0.7 0.12 28 / 0.2);
-  --hairline: oklch(0.95 0.01 150 / 0.11);
-  --brand: oklch(0.72 0.15 158);
+  --paper: #141516;
+  --paper-edge: #111213;
+  --surface: #1c1d1f;
+  --surface-raised: #242527;
+  --ink: #eeede8;
+  --ink-soft: #b1b0aa;
+  --ink-faint: #92938e;
+  --rule-line: rgb(238 237 232 / 0.07);
+  --rule-margin: rgb(210 152 131 / 0.18);
+  --hairline: rgb(238 237 232 / 0.11);
+  --brand: #a6c6a0;
 
-  --list-coral: oklch(0.68 0.12 32);
-  --list-coral-soft: oklch(0.235 0.034 32);
-  --list-mint: oklch(0.66 0.105 162);
-  --list-mint-soft: oklch(0.23 0.032 162);
-  --list-lavender: oklch(0.68 0.11 295);
-  --list-lavender-soft: oklch(0.235 0.034 295);
-  --list-butter: oklch(0.73 0.115 82);
-  --list-butter-soft: oklch(0.24 0.032 82);
-  --list-sky: oklch(0.67 0.11 242);
-  --list-sky-soft: oklch(0.23 0.033 242);
-  --list-blush: oklch(0.69 0.12 355);
-  --list-blush-soft: oklch(0.235 0.035 355);
-  --accent-list-foreground: oklch(0.16 0.02 158);
-  --shadow-panel: 0 1px 0 oklch(1 0 0 / 0.025) inset, 0 8px 20px oklch(0.06 0.01 158 / 0.22);
-  --shadow-button: 0 1px 2px oklch(0.06 0.01 158 / 0.28);
+  --list-coral: #dba18e;
+  --list-coral-soft: #302825;
+  --list-mint: #a6c6a0;
+  --list-mint-soft: #262e27;
+  --list-lavender: #b9abd6;
+  --list-lavender-soft: #2b2833;
+  --list-butter: #d7bd82;
+  --list-butter-soft: #302d25;
+  --list-sky: #96b9d2;
+  --list-sky-soft: #252c32;
+  --list-blush: #d1a0b4;
+  --list-blush-soft: #30262c;
+  --accent-list-foreground: #1b211c;
+  --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.025) inset, 0 16px 40px -20px rgb(0 0 0 / 0.5);
+  --shadow-button: 0 1px 2px rgb(0 0 0 / 0.2);
 
-  --primary: oklch(0.65 0.11 158);
-  --primary-foreground: oklch(0.16 0.02 158);
-  --secondary: oklch(0.245 0.022 158);
+  --primary: #a6c6a0;
+  --primary-foreground: #1b211c;
+  --secondary: #28292b;
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.245 0.022 158);
+  --muted: #28292b;
   --muted-foreground: var(--ink-soft);
-  --accent: oklch(0.245 0.022 158);
+  --accent: #303133;
   --accent-foreground: var(--ink);
   --destructive: oklch(0.65 0.16 25);
-  --ring: oklch(0.72 0.15 158 / 0.6);
+  --ring: rgb(166 198 160 / 0.7);
 }
 
 @theme inline {
@@ -144,11 +144,41 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --spacing-rule: var(--rule-height);
+  --default-transition-duration: 240ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
   * {
     border-color: var(--border);
+  }
+
+  :where(
+    body,
+    header,
+    main,
+    section,
+    article,
+    footer,
+    div,
+    nav,
+    form,
+    ul,
+    li,
+    a,
+    button,
+    input,
+    span,
+    p,
+    h1,
+    h2,
+    h3,
+    svg,
+    path
+  ) {
+    transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+    transition-duration: 280ms;
+    transition-timing-function: ease;
   }
 
   html {
@@ -211,7 +241,7 @@
 
   .surface-panel {
     border: 1px solid var(--hairline);
-    border-radius: 1.5rem;
+    border-radius: 1.25rem;
     background: color-mix(in oklab, var(--surface) 94%, transparent);
     box-shadow: var(--shadow-panel);
   }
@@ -279,7 +309,7 @@
   }
 
   .dark .paper-sheet::before {
-    opacity: 0.035;
+    opacity: 0.015;
     mix-blend-mode: screen;
   }
 
@@ -308,13 +338,57 @@
     text-transform: uppercase;
   }
 
+  .page-title {
+    font-size: clamp(1.875rem, 4vw, 2.5rem);
+    font-weight: 650;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
+  }
+
+  .demo-sheet {
+    position: relative;
+    border: 1px solid var(--hairline);
+    border-radius: 0.875rem;
+    background: var(--surface);
+    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.25);
+  }
+
+  .demo-sheet::before {
+    content: "";
+    position: absolute;
+    inset: 10px -7px -9px 7px;
+    z-index: -1;
+    border: 1px solid var(--hairline);
+    border-radius: inherit;
+    background: var(--surface-raised);
+    transform: rotate(3deg);
+    transition:
+      background-color 280ms ease,
+      border-color 280ms ease;
+  }
+
+  .progress-track {
+    height: 3px;
+    overflow: hidden;
+    background: var(--hairline);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent-list);
+    transform-origin: left;
+    transition:
+      transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 280ms ease;
+  }
+
   .primary-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     min-height: 3rem;
-    border-radius: 999px;
+    border-radius: 0.875rem;
     background: var(--primary);
     color: var(--primary-foreground);
     font-size: 0.9375rem;
@@ -324,11 +398,14 @@
     transition:
       transform 180ms ease,
       filter 180ms ease,
-      background-color 180ms ease;
+      background-color 280ms ease,
+      color 280ms ease,
+      box-shadow 280ms ease;
   }
 
   .primary-action:hover {
-    filter: brightness(1.05);
+    filter: brightness(1.07);
+    transform: translateY(-1px);
   }
 
   .primary-action:active {
@@ -341,7 +418,9 @@
   }
 
   .history-row {
-    transition: background-color 160ms ease;
+    transition:
+      background-color 240ms ease,
+      border-color 240ms ease;
   }
 }
 

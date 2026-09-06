@@ -60,21 +60,22 @@ export function CreateListPage() {
   }
 
   return (
-    <>
+    <div className="lg:grid lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
       <m.form
         onSubmit={handleSubmit}
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: staggerChildren(0.05) } }}
         style={accentStyle(color)}
-        className="pt-6 sm:pt-9"
+        className="min-w-0 pt-6 sm:pt-9 lg:pt-6"
       >
         <m.div variants={fadeUp}>
-          <h1 className="hand-title text-4xl text-ink sm:text-5xl">Nova lista</h1>
+          <p className="section-label mb-3">Um começo organizado</p>
+          <h1 className="page-title text-ink">Nova lista</h1>
           <p className="mt-2 text-sm text-ink-soft">Escolha um tipo e dê um nome para começar.</p>
         </m.div>
 
-        <m.div variants={fadeUp} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <m.div variants={fadeUp} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:gap-1.5">
           {LIST_TYPES.map((type) => {
             const selected = type.id === listType;
             const TypeIcon = iconById(type.defaultIcon);
@@ -89,15 +90,23 @@ export function CreateListPage() {
                 transition={spring.snappy}
                 style={accentStyle(type.defaultColor)}
                 className={cn(
-                  'relative flex h-12 items-center gap-2 rounded-xl border px-3 text-left transition-[border-color,background-color,box-shadow,color]',
+                  'relative flex min-h-14 items-center gap-2 rounded-xl border px-3 text-left transition-[border-color,background-color,box-shadow,color] lg:flex-col lg:justify-center lg:gap-2 lg:px-1 lg:py-3',
                   selected
-                    ? 'border-accent-list bg-accent-list text-accent-list-foreground'
+                    ? 'border-accent-list/60 bg-accent-list-soft text-ink'
                     : 'border-hairline bg-surface/75 text-ink-soft hover:border-ink/25 hover:bg-surface',
                 )}
               >
-                <TypeIcon className="size-[17px] shrink-0" strokeWidth={2.25} />
+                <TypeIcon
+                  className={cn('size-[17px] shrink-0', selected && 'text-accent-list')}
+                  strokeWidth={2.25}
+                />
                 <span className="truncate text-xs font-semibold">{type.label}</span>
-                {selected ? <Check className="ml-auto size-3.5 shrink-0" strokeWidth={3} /> : null}
+                {selected ? (
+                  <Check
+                    className="ml-auto size-3.5 shrink-0 text-accent-list lg:absolute lg:top-1.5 lg:right-1.5 lg:size-3"
+                    strokeWidth={3}
+                  />
+                ) : null}
               </m.button>
             );
           })}
@@ -107,7 +116,7 @@ export function CreateListPage() {
           variants={fadeUp}
           className="mt-5 overflow-hidden rounded-[1.25rem] border border-hairline bg-surface"
         >
-          <div className="h-1 bg-accent-list" />
+          <div className="h-[3px] bg-accent-list" />
           <div className="flex items-center gap-3 px-4 pt-5 sm:px-5">
             <IconPicker
               value={icon}
@@ -153,6 +162,6 @@ export function CreateListPage() {
       </m.form>
 
       <ListHistory variant="embedded" />
-    </>
+    </div>
   );
 }
