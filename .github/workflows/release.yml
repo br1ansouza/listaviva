@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  imagem:
+    name: Imagem do backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/api
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release:
+    name: Publicar release
+    runs-on: ubuntu-latest
+    needs: imagem
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependências
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Build do frontend
+        working-directory: frontend
+        env:
+          PUBLIC_API_URL: https://listaviva-api.onrender.com
+        run: bun run build
+
+      - name: Empacotar o frontend
+        run: (cd frontend/dist && zip -qr ../../listaviva-frontend-${{ github.ref_name }}.zip .)
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: listaviva-frontend-*.zip
