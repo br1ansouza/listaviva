@@ -1,0 +1,56 @@
+version: 2
+
+updates:
+  - package-ecosystem: bundler
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+    labels: [dependencias, backend]
+    groups:
+      rails:
+        patterns: ["rails", "actioncable", "activerecord", "solid_*"]
+      demais:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+    labels: [dependencias, frontend]
+    groups:
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom", "react-router"]
+      build:
+        patterns: ["@rsbuild/*", "typescript", "@biomejs/*", "wrangler"]
+      demais:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+    labels: [dependencias, ci]
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+    labels: [dependencias, backend]
