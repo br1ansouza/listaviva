@@ -16,14 +16,17 @@ export function ConnectionState({ status, coldStart }: ConnectionStateProps) {
     <AnimatePresence>
       {visible && (
         <m.div
+          role="status"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
           transition={transition.base}
           className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2.5 rounded-full border border-hairline bg-surface-raised/95 px-4 py-2.5 shadow-lg backdrop-blur"
         >
-          <Mark animated className="size-4 text-ink-soft" />
-          <span className="text-xs text-ink-soft">
+          <span aria-hidden className="grid size-5 shrink-0 place-items-center">
+            <Mark animated className="block size-5 text-ink-soft" />
+          </span>
+          <span className="min-w-0 text-xs leading-5 text-ink-soft">
             {coldStart
               ? 'Acordando o servidor — pode levar até um minuto'
               : status === 'connecting'

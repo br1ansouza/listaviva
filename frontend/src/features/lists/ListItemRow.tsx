@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react';
 import { m } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ListItemPayload } from '@/lib/api';
@@ -14,7 +14,7 @@ interface ListItemRowProps {
   byOther?: boolean;
   authorLabel?: string;
   authorName?: string | null;
-  showAuthor?: boolean;
+  authorStyle?: CSSProperties;
   arriving?: boolean;
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
@@ -27,7 +27,7 @@ export function ListItemRow({
   byOther = false,
   authorLabel,
   authorName,
-  showAuthor = false,
+  authorStyle,
   arriving = false,
   onToggle,
   onRename,
@@ -63,13 +63,16 @@ export function ListItemRow({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="group relative flex items-center gap-3 pr-1 pl-3"
-      style={{ minHeight: 'var(--rule-height)' }}
+      className={cn(
+        'group relative items-center gap-x-3 pr-1 pl-3',
+        byOther ? 'attributed-item sm:flex' : 'flex',
+      )}
+      style={{ ...authorStyle, minHeight: 'var(--rule-height)' }}
     >
       {byOther ? (
         <span
           aria-hidden
-          className="-translate-y-1/2 absolute top-1/2 left-0 h-[1.05em] w-[3px] rounded-full bg-accent-list"
+          className="-translate-y-1/2 absolute top-1/2 left-0 h-6 w-[3px] rounded-full bg-[var(--author-color)]"
         />
       ) : null}
 
@@ -79,7 +82,7 @@ export function ListItemRow({
           initial={{ opacity: 0.55 }}
           animate={{ opacity: 0 }}
           transition={{ duration: 1.6, ease: easing.out }}
-          className="pointer-events-none absolute inset-x-1 inset-y-1 rounded-md bg-accent-list-soft"
+          className="pointer-events-none absolute inset-x-1 inset-y-1 rounded-md bg-[var(--author-background)]"
         />
       )}
 
@@ -92,7 +95,7 @@ export function ListItemRow({
         aria-pressed={item.done}
         aria-label={item.done ? 'Desmarcar item' : 'Marcar item como feito'}
         className={cn(
-          'grid size-[22px] shrink-0 place-items-center rounded-md border transition-colors',
+          'item-check grid size-[22px] shrink-0 place-items-center rounded-md border transition-colors',
           item.done
             ? 'border-accent-list bg-accent-list'
             : 'border-ink/25 bg-surface/70 hover:border-accent-list/70',
@@ -122,18 +125,18 @@ export function ListItemRow({
             }
           }}
           maxLength={500}
-          className="min-w-0 flex-1 bg-transparent text-[0.95rem] leading-[var(--rule-height)] text-ink outline-none"
+          className="item-content min-w-0 flex-1 bg-transparent text-[0.95rem] text-ink outline-none"
         />
       ) : (
         <button
           type="button"
           disabled={readOnly}
           onClick={() => setEditing(true)}
-          className="min-w-0 flex-1 text-left"
+          className="item-content min-w-0 flex-1 text-left"
         >
           <span
             className={cn(
-              'relative inline-block max-w-full truncate align-middle text-[0.95rem] leading-[var(--rule-height)]',
+              'relative inline-block max-w-full truncate align-middle text-[0.95rem]',
               item.done ? 'text-ink-faint' : 'text-ink',
             )}
           >
@@ -143,15 +146,15 @@ export function ListItemRow({
         </button>
       )}
 
-      {showAuthor && !editing ? (
+      {byOther ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={authorLabel}
-              className="max-w-[6.5rem] shrink-0 truncate rounded-full bg-accent-list-soft px-2 py-0.5 text-[0.68rem] font-medium text-ink-soft"
-            >
-              {authorName ?? 'outra pessoa'}
+            <button type="button" aria-label={authorLabel} className="author-badge">
+              <span
+                aria-hidden
+                className="size-1.5 shrink-0 rounded-full bg-[var(--author-color)]"
+              />
+              <span className="truncate">{authorName ?? 'Outra pessoa'}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" align="end">
@@ -165,7 +168,7 @@ export function ListItemRow({
           type="button"
           onClick={onRemove}
           aria-label="Remover item"
-          className="grid size-7 shrink-0 place-items-center rounded-full text-ink-faint opacity-45 transition-[opacity,color,background-color] hover:bg-muted hover:text-ink group-hover:opacity-100 focus-visible:opacity-100 sm:opacity-0"
+          className="item-remove grid size-7 shrink-0 place-items-center rounded-full text-ink-faint opacity-45 transition-[opacity,color,background-color] hover:bg-muted hover:text-ink group-hover:opacity-100 focus-visible:opacity-100 sm:opacity-0"
         >
           <X className="size-4" />
         </button>

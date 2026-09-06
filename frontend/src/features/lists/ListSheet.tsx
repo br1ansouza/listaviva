@@ -1,8 +1,10 @@
 import { AnimatePresence, m } from 'motion/react';
+import { useMemo } from 'react';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { ListItemPayload, ListPayload } from '@/lib/api';
 import { deviceId } from '@/lib/device';
+import { listAuthors } from '@/lib/list-authors';
 import {
   accentStyle,
   iconById,
@@ -50,17 +52,22 @@ export function ListSheet({
   const arrivingItemIds = useListStore((state) => state.arrivingItemIds);
   const itemRenderKeys = useListStore((state) => state.itemRenderKeys);
   const myDeviceId = deviceId();
+  const authors = useMemo(() => listAuthors(list.items, list.color), [list.items, list.color]);
 
   function byOther(item: ListItemPayload): boolean {
     return item.created_by_device_id !== null && item.created_by_device_id !== myDeviceId;
   }
 
   function authorName(item: ListItemPayload): string | null {
-    return item.created_by_name?.trim() || null;
+    return (
+      item.created_by_name?.trim() ||
+      authors.get(item.created_by_device_id ?? '')?.fallbackName ||
+      null
+    );
   }
 
   function authorLabel(item: ListItemPayload): string {
-    const author = item.created_by_name?.trim();
+    const author = authorName(item);
     const editor = item.updated_by_name?.trim();
     const base = author ? `Anotado por ${author}` : 'Anotado por outra pessoa';
 
@@ -154,16 +161,13 @@ export function ListSheet({
                 variants={{ visible: { transition: staggerChildren(0.03) } }}
               >
                 <AnimatePresence initial={false}>
-                  {list.items.map((item, index) => (
+                  {list.items.map((item) => (
                     <ListItemRow
                       key={itemRenderKeys[item.id] ?? item.id}
                       item={item}
                       readOnly={readOnly}
                       byOther={byOther(item)}
-                      showAuthor={
-                        byOther(item) &&
-                        list.items[index - 1]?.created_by_device_id !== item.created_by_device_id
-                      }
+                      authorStyle={authors.get(item.created_by_device_id ?? '')?.style}
                       authorLabel={authorLabel(item)}
                       authorName={authorName(item)}
                       arriving={arrivingItemIds.includes(item.id)}
