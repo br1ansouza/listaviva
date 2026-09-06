@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 
 import { LIST_COLORS, type ListColor } from '@/lib/list-catalog';
 import { spring, transition } from '@/lib/motion';
@@ -22,7 +22,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
         const selected = color.id === value;
 
         return (
-          <motion.button
+          <m.button
             key={color.id}
             type="button"
             role="radio"
@@ -38,15 +38,15 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
             style={{ backgroundColor: color.token }}
           >
             {selected && (
-              <motion.span
+              <m.span
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={transition.fast}
               >
                 <Check className="size-4 text-ink/70" strokeWidth={3} />
-              </motion.span>
+              </m.span>
             )}
-          </motion.button>
+          </m.button>
         );
       })}
     </div>

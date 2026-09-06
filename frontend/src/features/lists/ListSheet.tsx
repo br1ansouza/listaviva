@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 
 import type { ListPayload } from '@/lib/api';
 import {
@@ -91,7 +91,7 @@ export function ListSheet({
         />
       ) : null}
 
-      <motion.ul
+      <m.ul
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: staggerChildren(0.03) } }}
@@ -109,7 +109,7 @@ export function ListSheet({
             />
           ))}
         </AnimatePresence>
-      </motion.ul>
+      </m.ul>
 
       {readOnly ? null : (
         <ItemComposer placeholder={definition.itemPlaceholder} onAdd={onAddItem} />

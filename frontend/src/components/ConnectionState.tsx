@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 
 import { Mark } from '@/components/brand/Mark';
 import type { CableStatus } from '@/lib/cable';
@@ -15,7 +15,7 @@ export function ConnectionState({ status, coldStart }: ConnectionStateProps) {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
@@ -30,7 +30,7 @@ export function ConnectionState({ status, coldStart }: ConnectionStateProps) {
                 ? 'Conectando à sala...'
                 : 'Reconectando...'}
           </span>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

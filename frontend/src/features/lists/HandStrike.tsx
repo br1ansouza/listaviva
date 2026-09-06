@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 
 import { duration, easing } from '@/lib/motion';
 
@@ -10,7 +10,7 @@ export function HandStrike({ active }: { active: boolean }) {
       preserveAspectRatio="none"
       className="pointer-events-none absolute inset-x-0 top-1/2 h-[0.55em] -translate-y-1/2 overflow-visible text-ink-soft"
     >
-      <motion.path
+      <m.path
         d="M0.8 6.1 C 18 3.4, 33 7.6, 49 5.2 S 78 3.1, 99.2 5.6"
         fill="none"
         stroke="currentColor"

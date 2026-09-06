@@ -1,5 +1,5 @@
 import { Clock, Loader2, Plus, Share2 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -85,7 +85,7 @@ export function HistoryPage() {
     <section className="pt-6">
       <h1 className="hand-title text-4xl text-ink">Minhas listas</h1>
 
-      <motion.ul
+      <m.ul
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: staggerChildren(0.04) } }}
@@ -97,7 +97,7 @@ export function HistoryPage() {
             const expiry = remainingLabel(list.expires_at);
 
             return (
-              <motion.li key={list.id} layout variants={fadeUp} style={accentStyle(list.color)}>
+              <m.li key={list.id} layout variants={fadeUp} style={accentStyle(list.color)}>
                 <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface/60 p-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-list/70">
                     <Icon className="size-5 text-ink" />
@@ -128,11 +128,11 @@ export function HistoryPage() {
                     <Share2 className="size-4" />
                   </button>
                 </div>
-              </motion.li>
+              </m.li>
             );
           })}
         </AnimatePresence>
-      </motion.ul>
+      </m.ul>
 
       {sharingId && (
         <ShareDialog

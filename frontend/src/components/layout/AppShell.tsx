@@ -1,5 +1,5 @@
 import { History } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <motion.main
+      <m.main
         key={location.pathname}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-24 sm:px-6"
       >
         {children}
-      </motion.main>
+      </m.main>
     </div>
   );
 }
