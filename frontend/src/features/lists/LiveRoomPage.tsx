@@ -1,12 +1,12 @@
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
-import { toast } from 'sonner';
 
 import { ConnectionState } from '@/components/ConnectionState';
 import { useColdStartHint } from '@/lib/use-cold-start';
 import { ExpiredList } from './ExpiredList';
 import { ListSheet } from './ListSheet';
+import { report } from './report';
 import { useListChannel } from './useListChannel';
 import { useListStore } from './useListStore';
 
@@ -30,10 +30,6 @@ export function LiveRoomPage() {
     if (token) loadByToken(token);
     return reset;
   }, [token, loadByToken, reset]);
-
-  function report(action: Promise<void>) {
-    action.catch(() => toast.error('A mudança não foi salva. Tente de novo.'));
-  }
 
   if (waiting) {
     return (
