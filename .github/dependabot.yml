@@ -54,3 +54,6 @@ updates:
     commit-message:
       prefix: chore
     labels: [dependencias, backend]
+    ignore:
+      - dependency-name: library/ruby
+        update-types: [version-update:semver-major]
