@@ -40,7 +40,7 @@ export function HomePage() {
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link to="/nova" className="primary-action group px-6">
-                Criar uma lista
+                Criar lista
                 <m.span
                   aria-hidden
                   className="grid place-items-center"
@@ -57,20 +57,20 @@ export function HomePage() {
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold text-ink-soft transition-colors hover:bg-muted hover:text-ink"
               >
                 <History className="size-4" />
-                Ver minhas listas
+                Minhas listas
               </Link>
             </div>
           </div>
 
           <div
             aria-hidden
-            className="relative mx-auto w-full max-w-[19rem] rotate-[1.5deg] rounded-[1.4rem] border border-hairline bg-surface-raised p-3 shadow-[0_22px_50px_color-mix(in_oklab,var(--ink)_14%,transparent)]"
+            className="relative mx-auto w-full max-w-[19rem] rotate-[1.5deg] rounded-[1.4rem] border border-hairline bg-surface-raised p-3 shadow-[var(--shadow-panel)]"
           >
             <span className="absolute -top-3 left-1/2 h-6 w-20 -translate-x-1/2 rotate-[-2deg] bg-[color-mix(in_oklab,var(--list-butter-soft)_82%,transparent)] opacity-90 shadow-sm" />
             <div className="rounded-xl bg-[var(--list-mint-soft)] px-4 py-3.5">
               <div className="flex items-center justify-between gap-3">
                 <span className="hand-title text-[1.65rem] text-ink">Churrasco sábado</span>
-                <span className="rounded-full bg-[var(--list-mint)] px-2 py-1 text-[0.58rem] font-bold tracking-wider text-white uppercase dark:text-paper">
+                <span className="rounded-full bg-[var(--list-mint)] px-2 py-1 text-[0.58rem] font-bold tracking-wider whitespace-nowrap text-white uppercase dark:text-paper">
                   ao vivo
                 </span>
               </div>

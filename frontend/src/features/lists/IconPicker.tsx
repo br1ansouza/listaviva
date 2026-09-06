@@ -26,7 +26,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           aria-label="Escolher ícone da lista"
           className={cn(
             'grid size-12 shrink-0 place-items-center rounded-2xl border border-accent-list/25 bg-accent-list-soft text-accent-list',
-            'shadow-sm transition-colors hover:border-accent-list/45',
+            'transition-colors hover:border-accent-list/45',
             className,
           )}
         >
