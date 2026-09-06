@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+repo_root="$(git rev-parse --show-toplevel)"
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if grep -q '^frontend/' <<<"$staged"; then
+  echo "→ frontend: biome + tsc"
+  (cd "$repo_root/frontend" && bun run check)
+fi
+
+if grep -q '^backend/' <<<"$staged"; then
+  echo "→ backend: rubocop"
+  (cd "$repo_root" && docker compose run --rm --no-deps -T api bin/rubocop -f simple >/dev/null)
+fi
