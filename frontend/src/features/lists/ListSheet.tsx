@@ -12,6 +12,7 @@ import {
   listTypeById,
 } from '@/lib/list-catalog';
 import { staggerChildren } from '@/lib/motion';
+import { formatMoney, shoppingValues } from '@/lib/shopping';
 import { ColorPickerPopover } from './ColorPickerPopover';
 import { IconPicker } from './IconPicker';
 import { ItemComposer } from './ItemComposer';
@@ -52,6 +53,14 @@ export function ListSheet({
   const itemRenderKeys = useListStore((state) => state.itemRenderKeys);
   const myParticipantId = list.participant_id;
   const authors = useMemo(() => listAuthors(list.items, list.color), [list.items, list.color]);
+  const updateShoppingItem = useListStore((state) => state.updateShoppingItem);
+  const shopping = list.list_type === 'shopping';
+  const total = shopping
+    ? list.items.reduce((sum, item) => sum + shoppingValues(item).subtotal, 0)
+    : 0;
+  const unpriced = shopping
+    ? list.items.filter((item) => shoppingValues(item).priceCents === null).length
+    : 0;
 
   function byOther(item: ListItemPayload): boolean {
     return item.created_by_id !== null && item.created_by_id !== myParticipantId;
@@ -151,7 +160,22 @@ export function ListSheet({
 
         <TooltipProvider delayDuration={200}>
           <div className="flex min-h-0 flex-1 flex-col bg-surface px-3 sm:block sm:px-5">
-            <div className="list-rules sheet-scroll min-h-0 flex-1 overflow-y-auto sm:max-h-[55svh] sm:flex-none">
+            {shopping ? (
+              <div
+                className="shopping-heading hidden shrink-0 border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint sm:grid"
+                aria-hidden
+              >
+                <span>Produto</span>
+                <div className="shopping-fields">
+                  <span>Qtd.</span>
+                  <span>Preço un. (R$)</span>
+                  <span>Subtotal</span>
+                </div>
+              </div>
+            ) : null}
+            <div
+              className={`${shopping ? '' : 'list-rules '}sheet-scroll min-h-0 flex-1 overflow-y-auto sm:max-h-[55svh] sm:flex-none`}
+            >
               <m.ul
                 initial="hidden"
                 animate="visible"
@@ -171,6 +195,8 @@ export function ListSheet({
                       onToggle={(done) => onToggleItem(item.id, done)}
                       onRename={(content) => onRenameItem(item.id, content)}
                       onRemove={() => onRemoveItem(item.id)}
+                      shopping={shopping}
+                      onShoppingChange={(changes) => updateShoppingItem(item.id, changes)}
                     />
                   ))}
                 </AnimatePresence>
@@ -188,6 +214,24 @@ export function ListSheet({
             )}
           </div>
         </TooltipProvider>
+        {shopping ? (
+          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-hairline bg-surface-raised/60 px-5 py-4 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink">Total da lista</p>
+              <p className="mt-1 text-xs text-ink-faint">
+                {unpriced
+                  ? `${unpriced} ${unpriced === 1 ? 'produto sem preço' : 'produtos sem preço'}`
+                  : 'Quantidade × preço de cada produto'}
+              </p>
+            </div>
+            <output
+              aria-label="Total da lista"
+              className="text-right text-xl font-semibold tracking-tight tabular-nums text-ink sm:text-2xl"
+            >
+              {formatMoney(total)}
+            </output>
+          </div>
+        ) : null}
       </div>
     </section>
   );

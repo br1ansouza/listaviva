@@ -8,6 +8,7 @@ import {
   MAX_ITEMS_PER_LIST,
 } from '@/lib/api';
 import { readDeviceName } from '@/lib/device';
+import type { ShoppingChanges } from '@/lib/shopping';
 
 export type ListStatus =
   | 'idle'
@@ -60,6 +61,7 @@ interface ListState {
   addItem: (content: string) => Promise<void>;
   toggleItem: (itemId: string, done: boolean) => Promise<void>;
   renameItem: (itemId: string, content: string) => Promise<void>;
+  updateShoppingItem: (itemId: string, changes: ShoppingChanges) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateList: (changes: { title?: string; icon?: string; color?: string }) => Promise<void>;
   applyRemoteEvent: (event: ListEvent) => void;
@@ -231,6 +233,15 @@ export const useListStore = create<ListState>((set, get) => ({
     }
   },
 
+  updateShoppingItem: async (itemId, changes) => {
+    const { list, shareToken } = get();
+    if (!list || itemId.startsWith('temp-')) return;
+    const saved = await api.updateItem(list.id, itemId, { metadata: changes }, shareToken);
+    if (get().list?.id === list.id && get().list?.items.some((item) => item.id === itemId)) {
+      get().applyRemoteEvent({ event: 'item_updated', payload: { ...saved } });
+    }
+  },
+
   removeItem: async (itemId) => {
     const { list, shareToken } = get();
     if (!list) return;
@@ -282,6 +293,8 @@ export const useListStore = create<ListState>((set, get) => ({
     }
 
     const item = payload as unknown as ListItemPayload;
+    const currentItem = list.items.find((current) => current.id === item.id);
+    if (currentItem && currentItem.updated_at > item.updated_at) return;
     const exists = list.items.some((current) => current.id === item.id);
     const twinId = optimisticTwinId(list.items, item, list.participant_id);
 
