@@ -1,4 +1,4 @@
-import { deviceId } from './device';
+import { deviceId, readDeviceName } from './device';
 
 const BASE_URL = (process.env.PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
@@ -11,6 +11,8 @@ export interface ListItemPayload {
   metadata: Record<string, unknown> | null;
   created_by_device_id: string | null;
   updated_by_device_id: string | null;
+  created_by_name: string | null;
+  updated_by_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +63,10 @@ export class ApiError extends Error {
   get isNotFound(): boolean {
     return this.status === 404;
   }
+
+  get isDuplicate(): boolean {
+    return this.code === 'item_duplicado';
+  }
 }
 
 export class NetworkError extends Error {
@@ -84,6 +90,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   };
 
   if (options.shareToken) headers['X-Share-Token'] = options.shareToken;
+
+  const name = readDeviceName();
+  if (name) headers['X-Device-Name'] = encodeURIComponent(name);
 
   let response: Response;
 

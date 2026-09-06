@@ -58,6 +58,7 @@
   --radius: 1rem;
 
   --rule-height: 2.875rem;
+  --header-border: 1px;
 }
 
 .dark {
@@ -200,12 +201,12 @@
 
   .site-header {
     background: color-mix(in oklab, var(--paper) 82%, transparent);
-    border-bottom: 1px solid color-mix(in oklab, var(--hairline) 60%, transparent);
+    border-bottom: var(--header-border) solid color-mix(in oklab, var(--hairline) 60%, transparent);
     backdrop-filter: blur(18px) saturate(1.2);
   }
 
   .main-stage {
-    min-height: calc(100dvh - 4.25rem);
+    min-height: calc(100dvh - 4.25rem - var(--header-border));
   }
 
   .surface-panel {
@@ -225,6 +226,26 @@
       var(--rule-line) var(--rule-height)
     );
     background-position: 0 0;
+  }
+
+  .sheet-scroll {
+    background-attachment: local;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule-line) transparent;
+  }
+
+  .sheet-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sheet-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sheet-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--ink) 18%, transparent);
   }
 
   .paper-sheet::before {

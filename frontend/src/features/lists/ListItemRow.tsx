@@ -2,6 +2,7 @@ import { Check, X } from 'lucide-react';
 import { m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ListItemPayload } from '@/lib/api';
 import { easing, sheetItem, spring } from '@/lib/motion';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ interface ListItemRowProps {
   item: ListItemPayload;
   readOnly?: boolean;
   byOther?: boolean;
+  authorLabel?: string;
   arriving?: boolean;
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
@@ -21,6 +23,7 @@ export function ListItemRow({
   item,
   readOnly = false,
   byOther = false,
+  authorLabel,
   arriving = false,
   onToggle,
   onRename,
@@ -59,13 +62,22 @@ export function ListItemRow({
       className="group relative flex items-center gap-3 pr-1 pl-3"
       style={{ minHeight: 'var(--rule-height)' }}
     >
-      <span
-        aria-hidden
-        className={cn(
-          'absolute top-1/2 left-0 h-[1.05em] w-[3px] -translate-y-1/2 rounded-full bg-accent-list transition-opacity',
-          byOther ? 'opacity-100' : 'opacity-0',
-        )}
-      />
+      {byOther ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={authorLabel}
+              className="-translate-y-1/2 absolute top-1/2 left-0 grid h-full w-3 place-items-center"
+            >
+              <span className="h-[1.05em] w-[3px] rounded-full bg-accent-list" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left" align="center">
+            {authorLabel}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
 
       {arriving && (
         <m.span

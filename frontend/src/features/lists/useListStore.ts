@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import { ApiError, api, type ListItemPayload, type ListPayload } from '@/lib/api';
-import { deviceId } from '@/lib/device';
+import { deviceId, readDeviceName } from '@/lib/device';
 
 export type ListStatus =
   | 'idle'
@@ -18,6 +18,30 @@ export interface ListEvent {
 }
 
 const ARRIVAL_HIGHLIGHT_MS = 2_600;
+
+export class DuplicateItemError extends Error {
+  constructor() {
+    super('item_duplicado');
+    this.name = 'DuplicateItemError';
+  }
+}
+
+export function normalizeContent(content: string): string {
+  return content.replace(/\s+/g, ' ').trim();
+}
+
+function duplicateOf(
+  items: ListItemPayload[],
+  content: string,
+  ignoreItemId?: string,
+): ListItemPayload | undefined {
+  const target = normalizeContent(content).toLocaleLowerCase();
+
+  return items.find(
+    (item) =>
+      item.id !== ignoreItemId && normalizeContent(item.content).toLocaleLowerCase() === target,
+  );
+}
 
 interface ListState {
   list: ListPayload | null;
@@ -102,17 +126,23 @@ export const useListStore = create<ListState>((set, get) => ({
     const { list, shareToken } = get();
     if (!list) return;
 
+    const normalized = normalizeContent(content);
+    if (!normalized) return;
+    if (duplicateOf(list.items, normalized)) throw new DuplicateItemError();
+
     const optimisticId = `temp-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
     const optimistic: ListItemPayload = {
       id: optimisticId,
       list_id: list.id,
-      content,
+      content: normalized,
       done: false,
       position: (list.items.at(-1)?.position ?? 0) + 1,
       metadata: null,
       created_by_device_id: deviceId(),
       updated_by_device_id: deviceId(),
+      created_by_name: readDeviceName(),
+      updated_by_name: readDeviceName(),
       created_at: now,
       updated_at: now,
     };
@@ -120,7 +150,7 @@ export const useListStore = create<ListState>((set, get) => ({
     set({ list: { ...list, items: [...list.items, optimistic] } });
 
     try {
-      const saved = await api.createItem(list.id, { content }, shareToken);
+      const saved = await api.createItem(list.id, { content: normalized }, shareToken);
       const current = get().list;
       if (!current) return;
 
@@ -161,16 +191,22 @@ export const useListStore = create<ListState>((set, get) => ({
     const { list, shareToken } = get();
     if (!list || itemId.startsWith('temp-')) return;
 
+    const normalized = normalizeContent(content);
+    if (!normalized) return;
+    if (duplicateOf(list.items, normalized, itemId)) throw new DuplicateItemError();
+
     const previous = list.items;
     set({
       list: {
         ...list,
-        items: list.items.map((item) => (item.id === itemId ? { ...item, content } : item)),
+        items: list.items.map((item) =>
+          item.id === itemId ? { ...item, content: normalized } : item,
+        ),
       },
     });
 
     try {
-      await api.updateItem(list.id, itemId, { content }, shareToken);
+      await api.updateItem(list.id, itemId, { content: normalized }, shareToken);
     } catch (error) {
       const current = get().list;
       if (current) set({ list: { ...current, items: previous } });

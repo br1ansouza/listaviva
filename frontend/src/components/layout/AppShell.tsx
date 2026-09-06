@@ -1,17 +1,31 @@
-import { ArrowLeft, History } from 'lucide-react';
+import { ArrowLeft, History, UserRound } from 'lucide-react';
 import { m } from 'motion/react';
-import type { ReactNode } from 'react';
+import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { Mark } from '@/components/brand/Mark';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useIdentity } from '@/lib/identity';
 import { spring, transition } from '@/lib/motion';
+
+const NameDialog = lazy(() =>
+  import('@/features/identity/NameDialog').then((module) => ({ default: module.NameDialog })),
+);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === '/';
   const isHistory = location.pathname.startsWith('/historico');
+  const name = useIdentity((state) => state.name);
+  const asking = useIdentity((state) => state.asking);
+  const openEditor = useIdentity((state) => state.openEditor);
+  const [nameDialogMounted, setNameDialogMounted] = useState(asking);
+  const initial = name ? [...new Intl.Segmenter().segment(name)][0]?.segment : null;
+
+  useEffect(() => {
+    if (asking) setNameDialogMounted(true);
+  }, [asking]);
 
   function goBack() {
     if (window.history.length > 1) {
@@ -56,6 +70,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <History className="size-[18px]" />
               </Link>
             )}
+            <m.button
+              type="button"
+              onClick={openEditor}
+              whileTap={{ scale: 0.9 }}
+              transition={spring.snappy}
+              aria-label={name ? `Você é ${name}. Trocar nome` : 'Escolher seu nome'}
+              className="grid size-10 place-items-center rounded-full border border-hairline bg-surface/80 text-ink-soft shadow-sm transition-colors hover:border-ink/20 hover:text-ink"
+            >
+              {initial ? (
+                <span className="text-[0.9rem] font-semibold leading-none">{initial}</span>
+              ) : (
+                <UserRound className="size-[18px]" />
+              )}
+            </m.button>
             <ThemeToggle />
           </div>
         </div>
@@ -70,6 +98,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         {children}
       </m.main>
+
+      {nameDialogMounted && (
+        <Suspense fallback={null}>
+          <NameDialog />
+        </Suspense>
+      )}
     </div>
   );
 }
