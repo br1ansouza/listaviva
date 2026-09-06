@@ -423,7 +423,7 @@
       border-color 240ms ease;
   }
 
-  .item-content,
+  input.item-content,
   .item-content > span {
     line-height: var(--rule-height);
   }
