@@ -147,7 +147,23 @@ export interface ListDraft {
   color: string;
 }
 
+export interface ItemOrderPayload {
+  order: string[];
+  order_updated_at: string;
+}
+
 export const api = {
+  moveItem: (
+    listId: string,
+    itemId: string,
+    direction: 'up' | 'down',
+    shareToken?: string | null,
+  ) =>
+    request<ItemOrderPayload>(`/lists/${listId}/items/${itemId}/move`, {
+      method: 'POST',
+      body: { direction },
+      shareToken,
+    }),
   createList: (list: ListDraft, replacement?: ListReplacement) =>
     request<ListPayload>('/lists', {
       method: 'POST',

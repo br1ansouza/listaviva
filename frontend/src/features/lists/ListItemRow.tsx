@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react';
+import { Check, MoreHorizontal } from 'lucide-react';
 import { m } from 'motion/react';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
@@ -20,7 +20,7 @@ interface ListItemRowProps {
   arriving?: boolean;
   onToggle: (done: boolean) => void;
   onRename: (content: string) => void;
-  onRemove: () => void;
+  onActions: () => void;
   shopping?: boolean;
   onShoppingChange?: (changes: ShoppingChanges) => Promise<void>;
 }
@@ -35,13 +35,29 @@ export function ListItemRow({
   arriving = false,
   onToggle,
   onRename,
-  onRemove,
+  onActions,
   shopping = false,
   onShoppingChange,
 }: ListItemRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.content);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressOrigin = useRef({ x: 0, y: 0 });
+  const held = useRef(false);
+  const actionable = !readOnly && !item.id.startsWith('temp-');
+
+  function cancelPress() {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  }
+
+  useEffect(
+    () => () => {
+      if (pressTimer.current) clearTimeout(pressTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!editing) setDraft(item.content);
@@ -137,7 +153,51 @@ export function ListItemRow({
         <button
           type="button"
           disabled={readOnly}
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            if (held.current) {
+              held.current = false;
+              return;
+            }
+            setEditing(true);
+          }}
+          onPointerDown={(event) => {
+            cancelPress();
+            held.current = false;
+            if (!actionable || event.pointerType === 'mouse' || !event.isPrimary) return;
+            pressOrigin.current = { x: event.clientX, y: event.clientY };
+            pressTimer.current = setTimeout(() => {
+              held.current = true;
+              onActions();
+            }, 500);
+          }}
+          onPointerMove={(event) => {
+            if (
+              Math.hypot(
+                event.clientX - pressOrigin.current.x,
+                event.clientY - pressOrigin.current.y,
+              ) > 8
+            )
+              cancelPress();
+          }}
+          onPointerUp={cancelPress}
+          onPointerCancel={cancelPress}
+          onPointerLeave={cancelPress}
+          onContextMenu={(event) => {
+            if (!actionable) return;
+            event.preventDefault();
+            cancelPress();
+            held.current = true;
+            onActions();
+          }}
+          onKeyDown={(event) => {
+            if (
+              actionable &&
+              (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10'))
+            ) {
+              event.preventDefault();
+              onActions();
+            }
+          }}
           className="item-content min-w-0 flex-1 text-left"
         >
           <span
@@ -180,11 +240,14 @@ export function ListItemRow({
       {!readOnly && (
         <button
           type="button"
-          onClick={onRemove}
-          aria-label="Remover item"
+          onClick={onActions}
+          id={`item-actions-${item.id}`}
+          disabled={!actionable}
+          aria-label={`Opções de ${item.content}`}
+          aria-haspopup="dialog"
           className="item-remove grid size-7 shrink-0 place-items-center rounded-full text-ink-faint opacity-45 transition-[opacity,color,background-color] hover:bg-muted hover:text-ink group-hover:opacity-100 focus-visible:opacity-100 sm:opacity-0"
         >
-          <X className="size-4" />
+          <MoreHorizontal className="size-4" />
         </button>
       )}
     </m.li>
