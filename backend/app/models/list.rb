@@ -43,6 +43,13 @@ class List < ApplicationRecord
     device_id.present? && creator_device_id == device_id
   end
 
+  def accessible_with?(device_id:, share_token:)
+    return true if created_by?(device_id)
+    return false unless shared? && !expired?
+
+    ActiveSupport::SecurityUtils.secure_compare(self.share_token, share_token.to_s)
+  end
+
   def channel_name
     "list:#{id}"
   end
