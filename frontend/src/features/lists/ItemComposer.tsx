@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { type FormEvent, useState } from 'react';
 
 import { spring } from '@/lib/motion';
@@ -28,7 +28,7 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
       className="flex items-center gap-3"
       style={{ minHeight: 'var(--rule-height)' }}
     >
-      <motion.button
+      <m.button
         type="submit"
         whileTap={{ scale: 0.85 }}
         transition={spring.snappy}
@@ -36,7 +36,7 @@ export function ItemComposer({ placeholder, onAdd }: ItemComposerProps) {
         className="grid size-[22px] shrink-0 place-items-center rounded-md border border-dashed border-ink/30 text-ink-faint"
       >
         <Plus className="size-3.5" strokeWidth={3} />
-      </motion.button>
+      </m.button>
 
       <input
         value={content}

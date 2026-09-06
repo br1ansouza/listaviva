@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { ListItemPayload } from '@/lib/api';
@@ -47,8 +47,7 @@ export function ListItemRow({
   }
 
   return (
-    <motion.li
-      layout
+    <m.li
       variants={sheetItem}
       initial="hidden"
       animate="visible"
@@ -56,7 +55,7 @@ export function ListItemRow({
       className="group flex items-center gap-3 pr-1"
       style={{ minHeight: 'var(--rule-height)' }}
     >
-      <motion.button
+      <m.button
         type="button"
         disabled={readOnly}
         onClick={() => onToggle(!item.done)}
@@ -70,14 +69,14 @@ export function ListItemRow({
           readOnly && 'cursor-default opacity-70',
         )}
       >
-        <motion.span
+        <m.span
           initial={false}
           animate={{ opacity: item.done ? 1 : 0, scale: item.done ? 1 : 0.6 }}
           transition={spring.snappy}
         >
           <Check className="size-3.5 text-ink" strokeWidth={3.5} />
-        </motion.span>
-      </motion.button>
+        </m.span>
+      </m.button>
 
       {editing ? (
         <input
@@ -124,6 +123,6 @@ export function ListItemRow({
           <X className="size-4" />
         </button>
       )}
-    </motion.li>
+    </m.li>
   );
 }

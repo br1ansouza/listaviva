@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,7 +19,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <motion.button
+        <m.button
           type="button"
           whileTap={{ scale: 0.9 }}
           transition={spring.snappy}
@@ -31,7 +31,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           )}
         >
           <Current className="size-6" strokeWidth={2} />
-        </motion.button>
+        </m.button>
       </PopoverTrigger>
 
       <PopoverContent align="start" className="w-[17.5rem] p-2">

@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -57,7 +57,7 @@ export function CreateListPage() {
   }
 
   return (
-    <motion.form
+    <m.form
       onSubmit={handleSubmit}
       initial="hidden"
       animate="visible"
@@ -65,16 +65,16 @@ export function CreateListPage() {
       style={accentStyle(color)}
       className="pt-8"
     >
-      <motion.h1 variants={fadeUp} className="hand-title text-4xl text-ink">
+      <m.h1 variants={fadeUp} className="hand-title text-4xl text-ink">
         Nova lista
-      </motion.h1>
+      </m.h1>
 
-      <motion.div variants={fadeUp} className="mt-6 flex gap-2">
+      <m.div variants={fadeUp} className="mt-6 flex gap-2">
         {LIST_TYPES.map((type) => {
           const selected = type.id === listType;
 
           return (
-            <motion.button
+            <m.button
               key={type.id}
               type="button"
               onClick={() => selectType(type.id)}
@@ -89,12 +89,12 @@ export function CreateListPage() {
             >
               <span className="block text-sm font-medium">{type.label}</span>
               <span className="mt-0.5 block text-xs text-ink-faint">{type.hint}</span>
-            </motion.button>
+            </m.button>
           );
         })}
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={fadeUp} className="mt-6 flex items-center gap-3">
+      <m.div variants={fadeUp} className="mt-6 flex items-center gap-3">
         <IconPicker
           value={icon}
           onChange={(next) => {
@@ -110,9 +110,9 @@ export function CreateListPage() {
           maxLength={120}
           className="hand-title h-12 w-full border-0 border-b border-hairline bg-transparent text-3xl text-ink outline-none placeholder:text-ink-faint focus:border-accent-list"
         />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={fadeUp} className="mt-8">
+      <m.div variants={fadeUp} className="mt-8">
         <span className="text-xs font-medium tracking-wide text-ink-faint uppercase">Cor</span>
         <ColorPicker
           value={color}
@@ -122,9 +122,9 @@ export function CreateListPage() {
           }}
           className="mt-3"
         />
-      </motion.div>
+      </m.div>
 
-      <motion.button
+      <m.button
         variants={fadeUp}
         type="submit"
         disabled={saving}
@@ -132,7 +132,7 @@ export function CreateListPage() {
       >
         {saving ? <Loader2 className="size-4 animate-spin" /> : null}
         {saving ? 'Criando...' : 'Criar lista'}
-      </motion.button>
-    </motion.form>
+      </m.button>
+    </m.form>
   );
 }
