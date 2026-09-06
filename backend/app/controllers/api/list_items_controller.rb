@@ -35,7 +35,13 @@ module Api
         authorize_access!(@list)
         return if performed?
 
-        @item.reload.update!(item_params.merge(updated_by_device_id: device_id, updated_by_name: device_name))
+        @item.reload
+        attributes = item_params.to_h
+        if attributes["metadata"].is_a?(Hash)
+          previous_metadata = @item.metadata.is_a?(Hash) ? @item.metadata : {}
+          attributes["metadata"] = previous_metadata.merge(attributes["metadata"])
+        end
+        @item.update!(attributes.merge(updated_by_device_id: device_id, updated_by_name: device_name))
       end
       ListBroadcaster.item_updated(@item)
 
