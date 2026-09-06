@@ -8,6 +8,10 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+if [ "$(git config core.hooksPath)" != ".githooks" ]; then
+  git config core.hooksPath .githooks
+fi
+
 docker compose up -d --build db api
 
 echo "Subindo frontend (porta 5173)..."
