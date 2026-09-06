@@ -228,6 +228,25 @@
     background-position: 0 0;
   }
 
+  .list-stage {
+    min-height: 100dvh;
+  }
+
+  @media (width < 40rem) {
+    .list-stage {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .list-stage .main-stage {
+      min-height: 0;
+      flex: 1;
+    }
+  }
+
   .sheet-scroll {
     background-attachment: local;
     overscroll-behavior: contain;

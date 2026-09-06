@@ -2,6 +2,8 @@ module Api
   class ListsController < ApplicationController
     include ListAccess
 
+    PERSONALIZATION_FIELDS = %w[icon color list_type].freeze
+
     before_action :require_device_id!, except: [ :by_token ]
     before_action :set_list, only: [ :show, :update, :share ]
     before_action :authorize_list_access!, only: [ :show, :update ]
@@ -17,6 +19,10 @@ module Api
     end
 
     def update
+      if personalization_requested? && !@list.created_by?(device_id)
+        return render_error(:forbidden, "somente_o_criador_personaliza")
+      end
+
       @list.update!(list_params)
       ListBroadcaster.list_updated(@list)
 
@@ -65,6 +71,10 @@ module Api
 
     def list_params
       params.require(:list).permit(:title, :list_type, :icon, :color)
+    end
+
+    def personalization_requested?
+      list_params.keys.intersect?(PERSONALIZATION_FIELDS)
     end
 
     def share_url_for(list)

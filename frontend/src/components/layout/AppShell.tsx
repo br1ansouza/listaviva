@@ -7,6 +7,7 @@ import { Mark } from '@/components/brand/Mark';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useIdentity } from '@/lib/identity';
 import { spring, transition } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
 const NameDialog = lazy(() =>
   import('@/features/identity/NameDialog').then((module) => ({ default: module.NameDialog })),
@@ -17,6 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const isHome = location.pathname === '/';
   const isHistory = location.pathname.startsWith('/historico');
+  const isListRoute = /^\/(lista|l)\//.test(location.pathname);
   const name = useIdentity((state) => state.name);
   const asking = useIdentity((state) => state.asking);
   const openEditor = useIdentity((state) => state.openEditor);
@@ -37,9 +39,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="paper-sheet min-h-dvh">
+    <div className={cn('paper-sheet min-h-dvh', isListRoute && 'list-stage')}>
       <header className="site-header sticky top-0 z-40">
-        <div className="mx-auto flex h-[4.25rem] w-full max-w-3xl items-center gap-2 px-4 sm:px-6">
+        <div
+          className={cn(
+            'mx-auto flex w-full max-w-3xl items-center gap-2 px-4 sm:h-[4.25rem] sm:px-6',
+            isListRoute ? 'h-12' : 'h-[4.25rem]',
+          )}
+        >
           {!isHome && (
             <m.button
               type="button"
@@ -53,14 +60,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             </m.button>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5 text-ink" aria-label="Início">
+          <Link
+            to="/"
+            className={cn('flex items-center gap-2.5 text-ink', isListRoute && 'max-sm:hidden')}
+            aria-label="Início"
+          >
             <span className="grid size-9 place-items-center rounded-xl bg-brand/10 text-ink">
               <Mark className="size-6" />
             </span>
             <span className="hand-title text-[1.85rem] leading-none">ListaViva</span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className={cn('ml-auto flex items-center gap-2', isListRoute && 'max-sm:hidden')}>
             {!isHistory && (
               <Link
                 to="/historico"
@@ -94,7 +105,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={transition.fast}
-        className="main-stage relative z-10 mx-auto w-full max-w-3xl px-4 pb-24 sm:px-6"
+        className={cn(
+          'main-stage relative z-10 mx-auto w-full max-w-3xl px-4 sm:px-6 sm:pb-24',
+          isListRoute ? 'flex min-h-0 flex-col pb-4 sm:block' : 'pb-24',
+        )}
       >
         {children}
       </m.main>
