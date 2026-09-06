@@ -1,0 +1,18 @@
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://listaviva-api.onrender.com wss://listaviva-api.onrender.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; worker-src 'self'; upgrade-insecure-requests
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/l/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/lista/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/historico
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow

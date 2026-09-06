@@ -10,6 +10,16 @@ export function report(action: Promise<void>): void {
       return;
     }
 
+    if (error instanceof ApiError && error.code === 'limite_de_itens') {
+      toast.error('Esta lista chegou a 230 itens. Exclua um item para adicionar outro.');
+      return;
+    }
+
+    if (error instanceof ApiError && error.status === 429) {
+      toast.error('Muitas alterações em pouco tempo. Aguarde um pouco e tente novamente.');
+      return;
+    }
+
     toast.error('A mudança não foi salva. Tente de novo.');
   });
 }

@@ -5,9 +5,7 @@ import { LIST_COLORS } from './list-catalog';
 
 export function listAuthors(items: ListItemPayload[], listColor: string) {
   const ids = [
-    ...new Set(
-      items.flatMap((item) => (item.created_by_device_id ? [item.created_by_device_id] : [])),
-    ),
+    ...new Set(items.flatMap((item) => (item.created_by_id ? [item.created_by_id] : []))),
   ].sort();
   const bannerColor = LIST_COLORS.some((color) => color.id === listColor) ? listColor : 'mint';
   const palette = LIST_COLORS.filter((color) => color.id !== bannerColor);
