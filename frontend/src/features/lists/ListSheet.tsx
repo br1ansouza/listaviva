@@ -1,8 +1,14 @@
+import { ChevronDown } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { type ListItemPayload, type ListPayload, MAX_ITEMS_PER_LIST } from '@/lib/api';
+import {
+  type ListItemPayload,
+  type ListPayload,
+  MAX_ITEMS_PER_LIST,
+  MAX_LIST_TITLE_LENGTH,
+} from '@/lib/api';
 import { listAuthors } from '@/lib/list-authors';
 import {
   accentStyle,
@@ -33,6 +39,16 @@ interface ListSheetProps {
   onChangeColor?: (color: ListColor) => void;
 }
 
+const SHOPPING_EXPANDED_KEY = 'listaviva:shopping-expanded:';
+
+function readShoppingExpanded(listId: string): boolean {
+  try {
+    return localStorage.getItem(`${SHOPPING_EXPANDED_KEY}${listId}`) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 export function ListSheet({
   list,
   readOnly = false,
@@ -59,12 +75,27 @@ export function ListSheet({
   const selectedIndex = list.items.findIndex((item) => item.id === selectedId);
   const selectedItem = list.items[selectedIndex];
   const shopping = list.list_type === 'shopping';
+  const [shoppingExpanded, setShoppingExpanded] = useState(() => readShoppingExpanded(list.id));
   const total = shopping
     ? list.items.reduce((sum, item) => sum + shoppingValues(item).subtotal, 0)
     : 0;
   const unpriced = shopping
     ? list.items.filter((item) => shoppingValues(item).priceCents === null).length
     : 0;
+
+  useEffect(() => {
+    setShoppingExpanded(readShoppingExpanded(list.id));
+  }, [list.id]);
+
+  function toggleShoppingDetails() {
+    const next = !shoppingExpanded;
+    setShoppingExpanded(next);
+    try {
+      localStorage.setItem(`${SHOPPING_EXPANDED_KEY}${list.id}`, String(next));
+    } catch {
+      // A preferência continua válida durante esta visita se o armazenamento estiver indisponível.
+    }
+  }
 
   function byOther(item: ListItemPayload): boolean {
     return item.created_by_id !== null && item.created_by_id !== myParticipantId;
@@ -114,7 +145,7 @@ export function ListSheet({
               <input
                 key={list.title}
                 defaultValue={list.title}
-                maxLength={120}
+                maxLength={MAX_LIST_TITLE_LENGTH}
                 aria-label="Título da lista"
                 onBlur={(event) => {
                   const trimmed = event.target.value.trim();
@@ -137,6 +168,28 @@ export function ListSheet({
 
             {customizable && onChangeColor ? (
               <ColorPickerPopover value={list.color as ListColor} onChange={onChangeColor} />
+            ) : null}
+
+            {shopping ? (
+              <m.button
+                type="button"
+                onClick={toggleShoppingDetails}
+                aria-expanded={shoppingExpanded}
+                aria-label={
+                  shoppingExpanded
+                    ? 'Ocultar quantidades e valores'
+                    : 'Mostrar quantidades e valores'
+                }
+                whileTap={{ scale: 0.9 }}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:bg-muted hover:text-ink"
+              >
+                <m.span
+                  animate={{ rotate: shoppingExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <ChevronDown className="size-5" strokeWidth={2.25} />
+                </m.span>
+              </m.button>
             ) : null}
           </div>
 
@@ -169,19 +222,25 @@ export function ListSheet({
                 Segure um item para organizar ou excluir
               </p>
             ) : null}
-            {shopping ? (
-              <div
-                className="shopping-heading hidden shrink-0 border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint sm:grid"
-                aria-hidden
-              >
-                <span>Produto</span>
-                <div className="shopping-fields">
-                  <span>Qtd.</span>
-                  <span>Preço un. (R$)</span>
-                  <span>Subtotal</span>
-                </div>
-              </div>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {shopping && shoppingExpanded ? (
+                <m.div
+                  className="shopping-heading hidden shrink-0 border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint sm:grid"
+                  aria-hidden
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <span>Produto</span>
+                  <div className="shopping-fields">
+                    <span>Qtd.</span>
+                    <span>Preço un. (R$)</span>
+                    <span>Subtotal</span>
+                  </div>
+                </m.div>
+              ) : null}
+            </AnimatePresence>
             <div
               className={`${shopping ? '' : 'list-rules '}sheet-scroll min-h-0 flex-1 overflow-y-auto sm:max-h-[55svh] sm:flex-none`}
             >
@@ -205,6 +264,7 @@ export function ListSheet({
                       onRename={(content) => onRenameItem(item.id, content)}
                       onActions={() => setSelectedId(item.id)}
                       shopping={shopping}
+                      shoppingExpanded={shoppingExpanded}
                       onShoppingChange={(changes) => updateShoppingItem(item.id, changes)}
                     />
                   ))}
@@ -223,24 +283,32 @@ export function ListSheet({
             )}
           </div>
         </TooltipProvider>
-        {shopping ? (
-          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-hairline bg-surface-raised/60 px-5 py-4 sm:px-6">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink">Total da lista</p>
-              <p className="mt-1 text-xs text-ink-faint">
-                {unpriced
-                  ? `${unpriced} ${unpriced === 1 ? 'produto sem preço' : 'produtos sem preço'}`
-                  : 'Quantidade × preço de cada produto'}
-              </p>
-            </div>
-            <output
-              aria-label="Total da lista"
-              className="text-right text-xl font-semibold tracking-tight tabular-nums text-ink sm:text-2xl"
+        <AnimatePresence initial={false}>
+          {shopping && shoppingExpanded ? (
+            <m.div
+              className="flex shrink-0 items-center justify-between gap-4 overflow-hidden border-t border-hairline bg-surface-raised/60 px-5 py-4 sm:px-6"
+              initial={{ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 }}
+              animate={{ height: 'auto', opacity: 1, paddingTop: 16, paddingBottom: 16 }}
+              exit={{ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              {formatMoney(total)}
-            </output>
-          </div>
-        ) : null}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">Total da lista</p>
+                <p className="mt-1 text-xs text-ink-faint">
+                  {unpriced
+                    ? `${unpriced} ${unpriced === 1 ? 'produto sem preço' : 'produtos sem preço'}`
+                    : 'Quantidade × preço de cada produto'}
+                </p>
+              </div>
+              <output
+                aria-label="Total da lista"
+                className="text-right text-xl font-semibold tracking-tight tabular-nums text-ink sm:text-2xl"
+              >
+                {formatMoney(total)}
+              </output>
+            </m.div>
+          ) : null}
+        </AnimatePresence>
       </div>
       {!readOnly && selectedItem ? (
         <ItemActionsDialog

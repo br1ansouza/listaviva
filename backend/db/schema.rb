@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_11_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,11 +36,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_160000) do
     t.datetime "created_at", null: false
     t.string "creator_device_id", null: false
     t.datetime "expires_at"
+    t.boolean "favorite", default: false, null: false
     t.string "icon", default: "check-square", null: false
     t.string "list_type", default: "todo", null: false
     t.string "share_token"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["creator_device_id", "favorite", "updated_at"], name: "index_lists_on_creator_device_id_and_favorite_and_updated_at"
     t.index ["creator_device_id"], name: "index_lists_on_creator_device_id"
     t.index ["expires_at"], name: "index_lists_on_expires_at"
     t.index ["share_token"], name: "index_lists_on_share_token", unique: true

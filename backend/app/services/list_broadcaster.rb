@@ -2,7 +2,11 @@ module ListBroadcaster
   module_function
 
   def list_updated(list)
-    broadcast(list, "list_updated", ListSerializer.call(list).except(:items, :is_creator, :participant_id, :share_token))
+    broadcast(
+      list,
+      "list_updated",
+      ListSerializer.call(list).except(:items, :is_creator, :participant_id, :share_token, :favorite)
+    )
   end
 
   def item_created(item)

@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, Loader2, Plus, Share2 } from 'lucide-react';
+import { ArrowRight, Clock, Loader2, Plus, Share2, Star } from 'lucide-react';
 import { m } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -20,6 +20,7 @@ export function ListHistory({ variant }: ListHistoryProps) {
   const [lists, setLists] = useState<ListSummaryPayload[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [savingFavoriteIds, setSavingFavoriteIds] = useState<string[]>([]);
   const coldStart = useColdStartHint(lists === null && !failed);
   const embedded = variant === 'embedded';
 
@@ -52,6 +53,30 @@ export function ListHistory({ variant }: ListHistoryProps) {
         : current,
     );
     toast.success('Link novo gerado.');
+  }
+
+  async function toggleFavorite(list: ListSummaryPayload) {
+    if (savingFavoriteIds.includes(list.id)) return;
+
+    const previous = lists;
+    const favorite = !list.favorite;
+    setSavingFavoriteIds((current) => [...current, list.id]);
+    setLists((current) =>
+      current
+        ? [...current.map((item) => (item.id === list.id ? { ...item, favorite } : item))].sort(
+            (a, b) => Number(b.favorite) - Number(a.favorite),
+          )
+        : current,
+    );
+
+    try {
+      await api.updateList(list.id, { favorite });
+    } catch {
+      setLists(previous);
+      toast.error('Não foi possível atualizar o favorito.');
+    } finally {
+      setSavingFavoriteIds((current) => current.filter((id) => id !== list.id));
+    }
   }
 
   if (embedded && (failed || lists?.length === 0)) return null;
@@ -186,6 +211,26 @@ export function ListHistory({ variant }: ListHistoryProps) {
                     </span>
                   </span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(list)}
+                  disabled={savingFavoriteIds.includes(list.id)}
+                  aria-pressed={list.favorite}
+                  aria-label={
+                    list.favorite
+                      ? `Remover ${list.title} dos favoritos`
+                      : `Favoritar ${list.title}`
+                  }
+                  className="grid size-9 shrink-0 place-items-center rounded-full text-ink-faint transition-[color,background-color,transform] hover:bg-muted hover:text-amber-500 active:scale-90 disabled:opacity-50"
+                >
+                  <Star
+                    className={
+                      list.favorite ? 'size-[18px] fill-amber-400 text-amber-500' : 'size-[18px]'
+                    }
+                    strokeWidth={2.2}
+                  />
+                </button>
 
                 <button
                   type="button"

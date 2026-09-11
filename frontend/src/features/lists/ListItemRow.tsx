@@ -1,5 +1,5 @@
 import { Check, MoreHorizontal } from 'lucide-react';
-import { m } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -22,6 +22,7 @@ interface ListItemRowProps {
   onRename: (content: string) => void;
   onActions: () => void;
   shopping?: boolean;
+  shoppingExpanded?: boolean;
   onShoppingChange?: (changes: ShoppingChanges) => Promise<void>;
 }
 
@@ -37,6 +38,7 @@ export function ListItemRow({
   onRename,
   onActions,
   shopping = false,
+  shoppingExpanded = false,
   onShoppingChange,
 }: ListItemRowProps) {
   const [editing, setEditing] = useState(false);
@@ -87,7 +89,11 @@ export function ListItemRow({
       exit="exit"
       className={cn(
         'group relative items-center gap-x-3 pr-1 pl-3',
-        shopping ? 'shopping-item' : byOther ? 'attributed-item sm:flex' : 'flex',
+        shopping
+          ? cn('shopping-item', !shoppingExpanded && 'shopping-item-collapsed')
+          : byOther
+            ? 'attributed-item sm:flex'
+            : 'flex',
       )}
       style={{ ...authorStyle, minHeight: 'var(--rule-height)' }}
     >
@@ -229,13 +235,16 @@ export function ListItemRow({
         </Tooltip>
       ) : null}
 
-      {shopping && onShoppingChange ? (
-        <ShoppingFields
-          item={item}
-          readOnly={readOnly || item.id.startsWith('temp-')}
-          onChange={onShoppingChange}
-        />
-      ) : null}
+      <AnimatePresence initial={false}>
+        {shopping && shoppingExpanded && onShoppingChange ? (
+          <ShoppingFields
+            key="shopping-fields"
+            item={item}
+            readOnly={readOnly || item.id.startsWith('temp-')}
+            onChange={onShoppingChange}
+          />
+        ) : null}
+      </AnimatePresence>
 
       {!readOnly && (
         <button
