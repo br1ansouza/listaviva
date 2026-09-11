@@ -11,6 +11,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-main-flow:
+    name: Fluxo dev para main
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir dev como origem
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "dev" ]; then
+            echo "PRs para main devem ter a branch dev como origem." >&2
+            exit 1
+          fi
+
   backend:
     name: Backend
     runs-on: ubuntu-latest
