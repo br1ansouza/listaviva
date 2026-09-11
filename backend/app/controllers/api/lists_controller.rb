@@ -2,7 +2,7 @@ module Api
   class ListsController < ApplicationController
     include ListAccess
 
-    PERSONALIZATION_FIELDS = %w[icon color list_type].freeze
+    PERSONALIZATION_FIELDS = %w[icon color list_type favorite].freeze
 
     before_action :set_list, only: [ :show, :update, :share ]
     before_action :authorize_list_access!, only: [ :show, :update ]
@@ -45,7 +45,7 @@ module Api
     end
 
     def mine
-      lists = List.created_by(device_id).includes(:list_items).order(updated_at: :desc)
+      lists = List.created_by(device_id).includes(:list_items).order(favorite: :desc, updated_at: :desc)
 
       render json: lists.map { |list| ListSerializer.summary(list, device_id: device_id) }
     end
@@ -86,7 +86,7 @@ module Api
     end
 
     def list_params
-      params.expect(list: [ :title, :list_type, :icon, :color ])
+      params.expect(list: [ :title, :list_type, :icon, :color, :favorite ])
     end
 
     def personalization_requested?

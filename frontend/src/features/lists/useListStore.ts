@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import {
   ApiError,
   api,
+  type ListChanges,
   type ListItemPayload,
   type ListPayload,
   MAX_ITEMS_PER_LIST,
@@ -71,7 +72,7 @@ interface ListState {
   updateShoppingItem: (itemId: string, changes: ShoppingChanges) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   moveItem: (itemId: string, direction: 'up' | 'down') => Promise<void>;
-  updateList: (changes: { title?: string; icon?: string; color?: string }) => Promise<void>;
+  updateList: (changes: ListChanges) => Promise<void>;
   applyRemoteEvent: (event: ListEvent) => void;
   reset: () => void;
 }

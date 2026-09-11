@@ -27,9 +27,9 @@ O ListaViva tira as pequenas combinações do meio das mensagens do grupo. Cada 
 - **Comece sem conta.** Escolha um nome para identificar o que você anota.
 - **Organize do seu jeito.** Tarefas, compras, eventos, refeições e ideias, com seis cores e uma seleção de ícones.
 - **Edite em tempo real.** Adicione, renomeie e risque itens; as mudanças aparecem para quem está na lista.
-- **Some as compras.** Nas listas de mercado, informe quantidade (inclusive fracionada) e preço unitário em reais. Cada produto mostra seu subtotal e o rodapé soma todos os itens, incluindo os riscados. Produtos sem preço ficam sinalizados; os valores são salvos ao sair do campo ou pressionar Enter e sincronizados com o grupo.
+- **Some as compras.** Nas listas de mercado, expanda os detalhes para informar quantidade (inclusive fracionada) e preço unitário em reais. Cada produto mostra seu subtotal e o rodapé soma todos os itens, incluindo os riscados. Recolha os valores para priorizar os nomes dos produtos, especialmente no celular.
 - **Compartilhe por link.** Envie pelo WhatsApp ou copie o endereço, com validade de 8 horas, 1 dia ou 1 semana.
-- **Retome depois.** As listas que você criou ficam no histórico do app, inclusive quando o link expira.
+- **Retome depois.** As listas que você criou ficam no histórico do app, inclusive quando o link expira. Marque as mais usadas com a estrela para mantê-las no topo.
 - **Use em qualquer tela.** Interface responsiva, temas claro e escuro, transições suaves e suporte à instalação como PWA.
 
 ### Do primeiro item ao último risco

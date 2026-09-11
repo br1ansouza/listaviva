@@ -1,3 +1,4 @@
+import { m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -115,7 +116,13 @@ export function ShoppingFields({
 }) {
   const { quantityMillis, priceCents, subtotal } = shoppingValues(item);
   return (
-    <div className="shopping-fields">
+    <m.div
+      className="shopping-fields overflow-hidden"
+      initial={{ height: 0, opacity: 0, y: -4 }}
+      animate={{ height: 'auto', opacity: 1, y: 0 }}
+      exit={{ height: 0, opacity: 0, y: -4 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="min-w-0">
         <span className="shopping-field-label sm:hidden">Qtd.</span>
         <DecimalField
@@ -147,6 +154,6 @@ export function ShoppingFields({
           {priceCents === null ? '—' : formatMoney(subtotal)}
         </output>
       </div>
-    </div>
+    </m.div>
   );
 }

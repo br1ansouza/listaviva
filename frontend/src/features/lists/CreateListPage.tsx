@@ -12,7 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ApiError, api, type ListDraft, type ListReplacement } from '@/lib/api';
+import {
+  ApiError,
+  api,
+  type ListDraft,
+  type ListReplacement,
+  MAX_LIST_TITLE_LENGTH,
+} from '@/lib/api';
 import {
   accentStyle,
   iconById,
@@ -164,7 +170,7 @@ export function CreateListPage() {
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={definition.titlePlaceholder}
-                maxLength={120}
+                maxLength={MAX_LIST_TITLE_LENGTH}
                 className="hand-title h-12 w-full border-0 border-b border-hairline bg-transparent text-3xl text-ink outline-none transition-colors placeholder:text-ink-faint/75 focus:border-accent-list"
               />
             </label>

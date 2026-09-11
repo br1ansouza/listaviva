@@ -18,6 +18,7 @@ module ListSerializer
       list_type: list.list_type,
       icon: list.icon,
       color: list.color,
+      favorite: list.favorite,
       share_token: list.share_token,
       expires_at: list.expires_at,
       expired: list.expired?,

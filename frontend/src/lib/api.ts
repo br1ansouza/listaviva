@@ -23,6 +23,7 @@ export interface ListPayload {
   list_type: string;
   icon: string;
   color: string;
+  favorite: boolean;
   share_token: string | null;
   expires_at: string | null;
   expired: boolean;
@@ -43,6 +44,7 @@ export interface SharePayload extends ListPayload {
 }
 
 export const MAX_ITEMS_PER_LIST = 230;
+export const MAX_LIST_TITLE_LENGTH = 15;
 
 export interface ListReplacement {
   id: string;
@@ -147,6 +149,14 @@ export interface ListDraft {
   color: string;
 }
 
+export interface ListChanges {
+  title?: string;
+  list_type?: string;
+  icon?: string;
+  color?: string;
+  favorite?: boolean;
+}
+
 export interface ItemOrderPayload {
   order: string[];
   order_updated_at: string;
@@ -179,7 +189,7 @@ export const api = {
   getList: (id: string, shareToken?: string | null) =>
     request<ListPayload>(`/lists/${id}`, { shareToken }),
 
-  updateList: (id: string, list: Partial<ListDraft>, shareToken?: string | null) =>
+  updateList: (id: string, list: ListChanges, shareToken?: string | null) =>
     request<ListPayload>(`/lists/${id}`, { method: 'PATCH', body: { list }, shareToken }),
 
   myLists: () => request<ListSummaryPayload[]>('/lists/mine'),
