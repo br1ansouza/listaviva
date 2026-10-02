@@ -2,6 +2,29 @@ import { deviceId, readDeviceName } from './device';
 
 const BASE_URL = (process.env.PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
+const SERVER_RESCUE_DELAY = 90_000;
+const SERVER_RESCUE_ENABLED = process.env.NODE_ENV === 'production';
+
+let serverRescueTimer: ReturnType<typeof setTimeout> | null = null;
+let serverRescueRequested = false;
+
+function armServerRescue() {
+  if (!SERVER_RESCUE_ENABLED || serverRescueRequested || serverRescueTimer) return;
+  serverRescueTimer = setTimeout(requestServerRescue, SERVER_RESCUE_DELAY);
+}
+
+function disarmServerRescue() {
+  if (!serverRescueTimer) return;
+  clearTimeout(serverRescueTimer);
+  serverRescueTimer = null;
+}
+
+function requestServerRescue() {
+  serverRescueTimer = null;
+  serverRescueRequested = true;
+  fetch('/wake', { method: 'POST', keepalive: true }).catch(() => undefined);
+}
+
 export interface ListItemPayload {
   id: string;
   list_id: string;
@@ -111,6 +134,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   let response: Response;
 
+  armServerRescue();
+
   try {
     response = await fetch(`${BASE_URL}/api${path}`, {
       method: options.method ?? 'GET',
@@ -121,6 +146,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   } catch {
     throw new NetworkError();
   }
+
+  disarmServerRescue();
 
   if (response.status === 204) return undefined as T;
 
