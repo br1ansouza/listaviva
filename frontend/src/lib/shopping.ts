@@ -5,6 +5,9 @@ export type ShoppingChanges = { quantity_millis?: number; unit_price_cents?: num
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 export const formatMoney = (cents: number): string => currency.format(cents / 100);
 
+export const formatQuantity = (millis: number): string =>
+  (millis / 1000).toLocaleString('pt-BR', { useGrouping: false, maximumFractionDigits: 3 });
+
 export function shoppingValues(item: ListItemPayload) {
   const quantity = item.metadata?.quantity_millis;
   const price = item.metadata?.unit_price_cents;

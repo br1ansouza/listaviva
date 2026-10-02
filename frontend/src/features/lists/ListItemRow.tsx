@@ -5,7 +5,7 @@ import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ListItemPayload } from '@/lib/api';
 import { easing, sheetItem, spring } from '@/lib/motion';
-import type { ShoppingChanges } from '@/lib/shopping';
+import { formatQuantity, type ShoppingChanges, shoppingValues } from '@/lib/shopping';
 import { cn } from '@/lib/utils';
 import { HandStrike } from './HandStrike';
 import { ShoppingFields } from './ShoppingFields';
@@ -48,6 +48,8 @@ export function ListItemRow({
   const pressOrigin = useRef({ x: 0, y: 0 });
   const held = useRef(false);
   const actionable = !readOnly && !item.id.startsWith('temp-');
+  const { quantityMillis } = shoppingValues(item);
+  const showQuantity = shopping && !shoppingExpanded && quantityMillis > 1000;
 
   function cancelPress() {
     if (pressTimer.current) clearTimeout(pressTimer.current);
@@ -204,17 +206,25 @@ export function ListItemRow({
               onActions();
             }
           }}
-          className="item-content min-w-0 flex-1 text-left"
+          className={cn(
+            'item-content min-w-0 flex-1 text-left',
+            showQuantity && 'flex items-baseline gap-1.5',
+          )}
         >
           <span
             className={cn(
-              'relative inline-block max-w-full truncate align-middle text-[0.95rem]',
+              'relative inline-block min-w-0 max-w-full truncate align-middle text-[0.95rem]',
               item.done ? 'text-ink-faint' : 'text-ink',
             )}
           >
             {item.content}
             <HandStrike active={item.done} />
           </span>
+          {showQuantity ? (
+            <span className="shrink-0 text-[0.72rem] font-medium tabular-nums text-ink-faint">
+              {formatQuantity(quantityMillis)}x
+            </span>
+          ) : null}
         </button>
       )}
 
