@@ -1,9 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "listaviva",
+  "main": "./worker/index.ts",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/wake"]
+  },
+  "vars": {
+    "API_HEALTH_URL": "https://listaviva-api.onrender.com/up",
+    "RENDER_SERVICE_ID": "srv-daeo5g0n74is73eo49p0"
   }
 }
