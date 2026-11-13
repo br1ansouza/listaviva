@@ -87,9 +87,11 @@ export function CreateListPage() {
         toast.error(
           error instanceof ApiError && error.status === 429
             ? 'Muitas tentativas de criação. Aguarde um pouco antes de tentar novamente.'
-            : confirmedReplacement
-              ? 'Não foi possível confirmar a criação. Confira seu histórico antes de tentar novamente.'
-              : 'Não deu para criar agora. Tente de novo em instantes.',
+            : error instanceof ApiError && error.code === 'sem_capacidade'
+              ? 'O ListaViva está sem espaço no momento. Tente mais tarde.'
+              : confirmedReplacement
+                ? 'Não foi possível confirmar a criação. Confira seu histórico antes de tentar novamente.'
+                : 'Não deu para criar agora. Tente de novo em instantes.',
         );
       }
     } finally {
