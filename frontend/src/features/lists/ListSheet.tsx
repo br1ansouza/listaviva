@@ -122,21 +122,21 @@ export function ListSheet({
   return (
     <section
       style={accentStyle(list.color)}
-      className="flex min-h-0 flex-1 flex-col pt-2 sm:block sm:pt-5"
+      className="flex min-h-0 flex-1 flex-col sm:block sm:pt-5"
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.4rem] border border-hairline bg-surface shadow-[var(--shadow-panel)] sm:block">
         <div className="h-[3px] shrink-0 bg-accent-list" />
 
-        <div className="shrink-0 border-b border-hairline bg-surface-raised/50 px-4 py-4 sm:px-5 sm:py-5">
-          <div className="flex items-center gap-3">
+        <div className="shrink-0 border-b border-hairline bg-surface-raised/50 px-3 py-2 sm:px-5 sm:py-5">
+          <div className="flex items-center gap-2 sm:gap-3">
             {customizable && onChangeIcon ? (
               <IconPicker
                 value={list.icon as ListIconId}
                 onChange={onChangeIcon}
-                className="size-11 rounded-xl"
+                className="size-10 rounded-xl sm:size-11"
               />
             ) : (
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-accent-list/20 bg-accent-list-soft text-accent-list">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-accent-list/20 bg-accent-list-soft text-accent-list sm:size-11">
                 <Icon className="size-5" />
               </span>
             )}
@@ -193,7 +193,7 @@ export function ListSheet({
             ) : null}
           </div>
 
-          <div className="mt-3 flex items-center justify-between gap-3 pl-0.5 text-[0.68rem] font-medium text-ink-faint">
+          <div className="mt-1 flex items-center justify-between gap-3 pl-0.5 text-[0.68rem] font-medium text-ink-faint sm:mt-3">
             <span>{definition.label}</span>
             <span>{remaining === 0 ? 'tudo riscado' : `${remaining} por fazer`}</span>
           </div>
@@ -216,9 +216,9 @@ export function ListSheet({
         </div>
 
         <TooltipProvider delayDuration={200}>
-          <div className="flex min-h-0 flex-1 flex-col bg-surface px-3 sm:block sm:px-5">
+          <div className="flex min-h-0 flex-1 flex-col bg-surface px-2 sm:block sm:px-5">
             {!readOnly && list.items.length > 0 ? (
-              <p className="shrink-0 py-2 text-center text-[0.65rem] text-ink-faint sm:hidden">
+              <p className="shrink-0 py-1 text-center text-[0.65rem] text-ink-faint sm:hidden">
                 Segure um item para organizar ou excluir
               </p>
             ) : null}
@@ -286,26 +286,28 @@ export function ListSheet({
         <AnimatePresence initial={false}>
           {shopping && shoppingExpanded ? (
             <m.div
-              className="flex shrink-0 items-center justify-between gap-4 overflow-hidden border-t border-hairline bg-surface-raised/60 px-5 py-4 sm:px-6"
-              initial={{ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 }}
-              animate={{ height: 'auto', opacity: 1, paddingTop: 16, paddingBottom: 16 }}
-              exit={{ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 }}
+              className="shrink-0 overflow-hidden border-t border-hairline bg-surface-raised/60"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">Total da lista</p>
-                <p className="mt-1 text-xs text-ink-faint">
-                  {unpriced
-                    ? `${unpriced} ${unpriced === 1 ? 'produto sem preço' : 'produtos sem preço'}`
-                    : 'Quantidade × preço de cada produto'}
-                </p>
+              <div className="flex items-center justify-between gap-4 px-4 py-2 sm:px-6 sm:py-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">Total da lista</p>
+                  <p className="text-xs text-ink-faint sm:mt-1">
+                    {unpriced
+                      ? `${unpriced} ${unpriced === 1 ? 'produto sem preço' : 'produtos sem preço'}`
+                      : 'Quantidade × preço de cada produto'}
+                  </p>
+                </div>
+                <output
+                  aria-label="Total da lista"
+                  className="text-right text-xl font-semibold tracking-tight tabular-nums text-ink sm:text-2xl"
+                >
+                  {formatMoney(total)}
+                </output>
               </div>
-              <output
-                aria-label="Total da lista"
-                className="text-right text-xl font-semibold tracking-tight tabular-nums text-ink sm:text-2xl"
-              >
-                {formatMoney(total)}
-              </output>
             </m.div>
           ) : null}
         </AnimatePresence>

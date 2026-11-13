@@ -501,7 +501,11 @@
   @media (width < 40rem) {
     .shopping-item {
       grid-template-columns: 22px minmax(0, 1fr) 28px;
-      row-gap: 0.25rem;
+      row-gap: 0.125rem;
+      padding-block: 0.375rem;
+    }
+    .shopping-item-collapsed {
+      padding-block: 0;
     }
     .shopping-item .item-check {
       grid-row: 1;
@@ -514,10 +518,11 @@
       grid-column: 2 / 4;
       grid-row: 3;
       width: 100%;
-      margin-top: 0.25rem;
+      margin-top: 0;
     }
     .shopping-field-label {
       display: block;
+      margin-bottom: 0.125rem;
     }
   }
 

@@ -2,6 +2,7 @@ import { Clock, Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { ConnectionState } from '@/components/ConnectionState';
+import { AppHeaderActions } from '@/components/layout/AppShell';
 import { remainingLabel } from '@/lib/expiry';
 import type { ListColor, ListIconId } from '@/lib/list-catalog';
 import { useColdStartHint } from '@/lib/use-cold-start';
@@ -61,7 +62,7 @@ export function ListPage() {
   const expiry = remainingLabel(list.expires_at);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col pt-4 sm:block">
+    <div className="flex min-h-0 flex-1 flex-col pt-1 sm:block sm:pt-4">
       <ListSheet
         list={list}
         editable
@@ -75,23 +76,25 @@ export function ListPage() {
       />
 
       {list.is_creator && (
-        <div className="mt-4 flex shrink-0 flex-wrap items-center gap-3 px-1 sm:mt-5">
+        <AppHeaderActions>
           <button
             type="button"
             onClick={() => setShareOpen(true)}
-            className="primary-action flex-1 px-6"
+            aria-label={list.share_token ? 'Compartilhar de novo' : 'Compartilhar'}
+            title={list.share_token ? 'Compartilhar de novo' : 'Compartilhar'}
+            aria-haspopup="dialog"
+            className="grid size-10 shrink-0 place-items-center rounded-full text-primary transition-colors hover:bg-primary/10"
           >
-            <Share2 className="size-4" />
-            {list.share_token ? 'Compartilhar de novo' : 'Compartilhar'}
+            <Share2 className="size-[18px]" />
           </button>
 
           {expiry && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-ink-faint">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-ink-faint">
               <Clock className="size-3.5" />
               {expiry}
             </span>
           )}
-        </div>
+        </AppHeaderActions>
       )}
 
       <ConnectionState status={connection} coldStart={coldStart} />
