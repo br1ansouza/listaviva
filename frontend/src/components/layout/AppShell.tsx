@@ -1,6 +1,15 @@
 import { ArrowLeft, History, UserRound } from 'lucide-react';
 import { m } from 'motion/react';
-import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { Mark } from '@/components/brand/Mark';
@@ -13,6 +22,13 @@ const NameDialog = lazy(() =>
   import('@/features/identity/NameDialog').then((module) => ({ default: module.NameDialog })),
 );
 
+const HeaderActionsContext = createContext<HTMLDivElement | null>(null);
+
+export function AppHeaderActions({ children }: { children: ReactNode }) {
+  const container = useContext(HeaderActionsContext);
+  return container ? createPortal(children, container) : null;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,6 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const asking = useIdentity((state) => state.asking);
   const openEditor = useIdentity((state) => state.openEditor);
   const [nameDialogMounted, setNameDialogMounted] = useState(asking);
+  const [headerActions, setHeaderActions] = useState<HTMLDivElement | null>(null);
   const initial = name ? [...new Intl.Segmenter().segment(name)][0]?.segment : null;
 
   useEffect(() => {
@@ -40,11 +57,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={cn('paper-sheet min-h-dvh', isListRoute && 'list-stage')}>
-      <header className="site-header sticky top-0 z-40">
+      <header className="site-header sticky top-0 z-40 shrink-0">
         <div
           className={cn(
-            'mx-auto flex w-full max-w-5xl items-center gap-2 px-5 sm:h-[4.25rem] sm:px-8',
-            isListRoute ? 'h-12' : 'h-[4.25rem]',
+            'mx-auto flex w-full items-center gap-2 px-5 sm:h-[4.25rem] sm:px-8',
+            isListRoute ? 'h-11 max-w-3xl max-sm:px-3' : 'h-[4.25rem] max-w-5xl',
           )}
         >
           {!isHome && (
@@ -78,7 +95,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
 
-          <div className={cn('ml-auto flex items-center gap-2', isListRoute && 'max-sm:hidden')}>
+          {isListRoute && (
+            <div ref={setHeaderActions} className="ml-auto flex items-center gap-2" />
+          )}
+
+          <div className={cn('flex items-center gap-2', isListRoute ? 'max-sm:hidden' : 'ml-auto')}>
             {!isHistory && (
               <Link
                 to="/historico"
@@ -118,11 +139,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           isHome
             ? 'flex flex-col pb-0 sm:pb-0'
             : isListRoute
-              ? 'flex min-h-0 flex-col pb-4 sm:block'
+              ? 'flex min-h-0 flex-col pb-2 max-sm:px-3 sm:block'
               : 'pb-24',
         )}
       >
-        {children}
+        <HeaderActionsContext value={headerActions}>{children}</HeaderActionsContext>
       </m.main>
 
       {nameDialogMounted && (

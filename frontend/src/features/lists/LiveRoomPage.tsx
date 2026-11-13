@@ -57,7 +57,7 @@ export function LiveRoomPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col pt-4 sm:block">
+    <div className="flex min-h-0 flex-1 flex-col pt-1 sm:block sm:pt-4">
       <ListSheet
         list={list}
         editable
