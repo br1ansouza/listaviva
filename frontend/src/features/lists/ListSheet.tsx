@@ -1,6 +1,25 @@
-import { ChevronDown } from 'lucide-react';
-import { AnimatePresence, m } from 'motion/react';
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { ChevronDown, GripVertical } from 'lucide-react';
+import { m } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
@@ -17,7 +36,6 @@ import {
   type ListIconId,
   listTypeById,
 } from '@/lib/list-catalog';
-import { staggerChildren } from '@/lib/motion';
 import { formatMoney, shoppingValues } from '@/lib/shopping';
 import { ColorPickerPopover } from './ColorPickerPopover';
 import { IconPicker } from './IconPicker';
@@ -72,8 +90,32 @@ export function ListSheet({
   const moveItem = useListStore((state) => state.moveItem);
   const removeItem = useListStore((state) => state.removeItem);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedIndex = list.items.findIndex((item) => item.id === selectedId);
-  const selectedItem = list.items[selectedIndex];
+  const selectedItem = list.items.find((item) => item.id === selectedId);
+  const [dragged, setDragged] = useState<{ id: string; height: number } | null>(null);
+  const activeItem = list.items.find((item) => item.id === dragged?.id);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 280, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function startDrag({ active }: DragStartEvent) {
+    setDragged({ id: String(active.id), height: active.rect.current.initial?.height ?? 46 });
+  }
+
+  function finishDrag({ active, over }: DragEndEvent) {
+    setDragged(null);
+    if (!over || active.id === over.id) return;
+    const ids = list.items.map((item) => item.id);
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    const ordered = arrayMove(ids, from, to);
+    const beforeId = ordered[to + 1] ?? null;
+    void moveItem(String(active.id), beforeId).catch(() => {
+      toast.error('A ordem não foi salva. Tente arrastar novamente.');
+    });
+  }
   const shopping = list.list_type === 'shopping';
   const [shoppingExpanded, setShoppingExpanded] = useState(() => readShoppingExpanded(list.id));
   const total = shopping
@@ -174,6 +216,7 @@ export function ListSheet({
               <m.button
                 type="button"
                 onClick={toggleShoppingDetails}
+                disabled={dragged !== null}
                 aria-expanded={shoppingExpanded}
                 aria-label={
                   shoppingExpanded
@@ -219,57 +262,90 @@ export function ListSheet({
           <div className="flex min-h-0 flex-1 flex-col bg-surface px-2 sm:block sm:px-5">
             {!readOnly && list.items.length > 0 ? (
               <p className="shrink-0 py-1 text-center text-[0.65rem] text-ink-faint sm:hidden">
-                Segure um item para organizar ou excluir
+                Segure e arraste para organizar · ⋯ para excluir
               </p>
             ) : null}
-            <AnimatePresence initial={false}>
-              {shopping && shoppingExpanded ? (
-                <m.div
-                  className="shopping-heading hidden shrink-0 border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint sm:grid"
-                  aria-hidden
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <span>Produto</span>
-                  <div className="shopping-fields">
-                    <span>Qtd.</span>
-                    <span>Preço un. (R$)</span>
-                    <span>Subtotal</span>
+            {shopping ? (
+              <div
+                className="collapse-panel max-sm:hidden"
+                data-expanded={shoppingExpanded}
+                aria-hidden
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="shopping-heading grid border-b border-hairline py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint">
+                    <span>Produto</span>
+                    <div className="shopping-fields">
+                      <span>Qtd.</span>
+                      <span>Preço un. (R$)</span>
+                      <span>Subtotal</span>
+                    </div>
                   </div>
-                </m.div>
-              ) : null}
-            </AnimatePresence>
+                </div>
+              </div>
+            ) : null}
             <div
               className={`${shopping ? '' : 'list-rules '}sheet-scroll min-h-0 flex-1 overflow-y-auto sm:max-h-[55svh] sm:flex-none`}
             >
-              <m.ul
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: staggerChildren(0.03) } }}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={startDrag}
+                onDragEnd={finishDrag}
+                onDragCancel={() => setDragged(null)}
+                accessibility={{
+                  screenReaderInstructions: {
+                    draggable:
+                      'Pressione espaço para pegar o item, use as setas para mover, espaço para soltar ou Escape para cancelar.',
+                  },
+                  announcements: {
+                    onDragStart: ({ active }) =>
+                      `Arrastando ${list.items.find((item) => item.id === active.id)?.content ?? 'item'}.`,
+                    onDragOver: ({ over }) =>
+                      over
+                        ? `Posição ${list.items.findIndex((item) => item.id === over.id) + 1} de ${list.items.length}.`
+                        : undefined,
+                    onDragEnd: () => 'Item solto.',
+                    onDragCancel: () => 'Movimento cancelado.',
+                  },
+                }}
               >
-                <AnimatePresence initial={false}>
-                  {list.items.map((item) => (
-                    <ListItemRow
-                      key={itemRenderKeys[item.id] ?? item.id}
-                      item={item}
-                      readOnly={readOnly}
-                      byOther={byOther(item)}
-                      authorStyle={authors.get(item.created_by_id ?? '')?.style}
-                      authorLabel={authorLabel(item)}
-                      authorName={authorName(item)}
-                      arriving={arrivingItemIds.includes(item.id)}
-                      onToggle={(done) => onToggleItem(item.id, done)}
-                      onRename={(content) => onRenameItem(item.id, content)}
-                      onActions={() => setSelectedId(item.id)}
-                      shopping={shopping}
-                      shoppingExpanded={shoppingExpanded}
-                      onShoppingChange={(changes) => updateShoppingItem(item.id, changes)}
-                    />
-                  ))}
-                </AnimatePresence>
-              </m.ul>
+                <SortableContext
+                  items={list.items.map((item) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul>
+                    {list.items.map((item) => (
+                      <ListItemRow
+                        key={itemRenderKeys[item.id] ?? item.id}
+                        item={item}
+                        readOnly={readOnly}
+                        byOther={byOther(item)}
+                        authorStyle={authors.get(item.created_by_id ?? '')?.style}
+                        authorLabel={authorLabel(item)}
+                        authorName={authorName(item)}
+                        arriving={arrivingItemIds.includes(item.id)}
+                        onToggle={(done) => onToggleItem(item.id, done)}
+                        onRename={(content) => onRenameItem(item.id, content)}
+                        onActions={() => setSelectedId(item.id)}
+                        shopping={shopping}
+                        shoppingExpanded={shoppingExpanded}
+                        onShoppingChange={(changes) => updateShoppingItem(item.id, changes)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+                <DragOverlay dropAnimation={null}>
+                  {activeItem && dragged ? (
+                    <div
+                      style={{ ...accentStyle(list.color), height: dragged.height }}
+                      className="flex items-center gap-3 rounded-xl border border-accent-list/50 bg-surface px-4 text-ink shadow-xl"
+                    >
+                      <GripVertical className="size-5 shrink-0 text-accent-list" />
+                      <span className="truncate text-[0.95rem]">{activeItem.content}</span>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </div>
 
             {readOnly ? null : (
@@ -283,16 +359,14 @@ export function ListSheet({
             )}
           </div>
         </TooltipProvider>
-        <AnimatePresence initial={false}>
-          {shopping && shoppingExpanded ? (
-            <m.div
-              className="shrink-0 overflow-hidden border-t border-hairline bg-surface-raised/60"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="flex items-center justify-between gap-4 px-4 py-2 sm:px-6 sm:py-4">
+        {shopping ? (
+          <div
+            className="collapse-panel shrink-0"
+            data-expanded={shoppingExpanded}
+            inert={!shoppingExpanded}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="flex items-center justify-between gap-4 border-t border-hairline bg-surface-raised/60 px-4 py-2 sm:px-6 sm:py-4">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-ink">Total da lista</p>
                   <p className="text-xs text-ink-faint sm:mt-1">
@@ -308,18 +382,15 @@ export function ListSheet({
                   {formatMoney(total)}
                 </output>
               </div>
-            </m.div>
-          ) : null}
-        </AnimatePresence>
+            </div>
+          </div>
+        ) : null}
       </div>
       {!readOnly && selectedItem ? (
         <ItemActionsDialog
           key={selectedItem.id}
           item={selectedItem}
-          index={selectedIndex}
-          count={list.items.length}
           onClose={() => setSelectedId(null)}
-          onMove={(direction) => moveItem(selectedItem.id, direction)}
           onRemove={() => removeItem(selectedItem.id)}
         />
       ) : null}
