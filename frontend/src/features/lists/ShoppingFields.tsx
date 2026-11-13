@@ -1,4 +1,3 @@
-import { m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -108,52 +107,55 @@ function DecimalField({
 export function ShoppingFields({
   item,
   readOnly,
+  expanded,
   onChange,
 }: {
   item: ListItemPayload;
   readOnly: boolean;
+  expanded: boolean;
   onChange: (changes: ShoppingChanges) => Promise<void>;
 }) {
   const { quantityMillis, priceCents, subtotal } = shoppingValues(item);
   return (
-    <m.div
-      className="shopping-fields overflow-hidden"
-      initial={{ height: 0, opacity: 0, y: -4 }}
-      animate={{ height: 'auto', opacity: 1, y: 0 }}
-      exit={{ height: 0, opacity: 0, y: -4 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+    <div
+      className="shopping-details"
+      data-expanded={expanded}
+      inert={!expanded}
+      aria-hidden={!expanded}
     >
-      <div className="min-w-0">
-        <span className="shopping-field-label sm:hidden">Qtd.</span>
-        <DecimalField
-          value={quantityMillis}
-          decimals={3}
-          max={9_999_999}
-          label={`Quantidade de ${item.content}`}
-          readOnly={readOnly}
-          onSave={(value) => onChange({ quantity_millis: value ?? 1000 })}
-        />
+      <div className="shopping-fields min-h-0 overflow-hidden">
+        <div className="min-w-0">
+          <span className="shopping-field-label sm:hidden">Qtd.</span>
+          <DecimalField
+            value={quantityMillis}
+            decimals={3}
+            max={9_999_999}
+            label={`Quantidade de ${item.content}`}
+            readOnly={readOnly}
+            onSave={(value) => onChange({ quantity_millis: value ?? 1000 })}
+          />
+        </div>
+        <div className="min-w-0">
+          <span className="shopping-field-label sm:hidden">Preço un. (R$)</span>
+          <DecimalField
+            value={priceCents}
+            decimals={2}
+            max={99_999_999}
+            label={`Preço unitário de ${item.content}`}
+            readOnly={readOnly}
+            onSave={(value) => onChange({ unit_price_cents: value })}
+          />
+        </div>
+        <div className="min-w-0 text-right">
+          <span className="shopping-field-label sm:hidden">Subtotal</span>
+          <output
+            className="flex min-h-9 items-center justify-end text-xs font-medium tabular-nums text-ink-soft"
+            aria-label={`Subtotal de ${item.content}`}
+          >
+            {priceCents === null ? '—' : formatMoney(subtotal)}
+          </output>
+        </div>
       </div>
-      <div className="min-w-0">
-        <span className="shopping-field-label sm:hidden">Preço un. (R$)</span>
-        <DecimalField
-          value={priceCents}
-          decimals={2}
-          max={99_999_999}
-          label={`Preço unitário de ${item.content}`}
-          readOnly={readOnly}
-          onSave={(value) => onChange({ unit_price_cents: value })}
-        />
-      </div>
-      <div className="min-w-0 text-right">
-        <span className="shopping-field-label sm:hidden">Subtotal</span>
-        <output
-          className="flex min-h-9 items-center justify-end text-xs font-medium tabular-nums text-ink-soft"
-          aria-label={`Subtotal de ${item.content}`}
-        >
-          {priceCents === null ? '—' : formatMoney(subtotal)}
-        </output>
-      </div>
-    </m.div>
+    </div>
   );
 }
