@@ -9,6 +9,7 @@ import {
   MAX_ITEMS_PER_LIST,
 } from '@/lib/api';
 import { readDeviceName } from '@/lib/device';
+import { applyItemOrder, type ItemMove } from '@/lib/item-order';
 import type { ShoppingChanges } from '@/lib/shopping';
 
 export type ListStatus =
@@ -32,6 +33,12 @@ export interface ListEvent {
 }
 
 const ARRIVAL_HIGHLIGHT_MS = 2_600;
+let orderQueue = Promise.resolve();
+let orderSession = 0;
+
+interface PendingMove extends ItemMove {
+  id: string;
+}
 
 export class DuplicateItemError extends Error {
   constructor() {
@@ -64,6 +71,8 @@ interface ListState {
   arrivingItemIds: string[];
   itemRenderKeys: Record<string, string>;
   orderUpdatedAt: string | null;
+  confirmedOrder: string[];
+  pendingMoves: PendingMove[];
   loadById: (id: string) => Promise<void>;
   loadByToken: (token: string) => Promise<void>;
   addItem: (content: string) => Promise<void>;
@@ -71,7 +80,7 @@ interface ListState {
   renameItem: (itemId: string, content: string) => Promise<void>;
   updateShoppingItem: (itemId: string, changes: ShoppingChanges) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
-  moveItem: (itemId: string, direction: 'up' | 'down') => Promise<void>;
+  moveItem: (itemId: string, beforeId: string | null) => Promise<void>;
   updateList: (changes: ListChanges) => Promise<void>;
   applyRemoteEvent: (event: ListEvent) => void;
   reset: () => void;
@@ -121,8 +130,12 @@ export const useListStore = create<ListState>((set, get) => ({
   arrivingItemIds: [],
   itemRenderKeys: {},
   orderUpdatedAt: null,
+  confirmedOrder: [],
+  pendingMoves: [],
 
-  reset: () =>
+  reset: () => {
+    orderSession += 1;
+    orderQueue = Promise.resolve();
     set({
       list: null,
       status: 'idle',
@@ -130,7 +143,10 @@ export const useListStore = create<ListState>((set, get) => ({
       arrivingItemIds: [],
       itemRenderKeys: {},
       orderUpdatedAt: null,
-    }),
+      confirmedOrder: [],
+      pendingMoves: [],
+    });
+  },
 
   loadById: async (id) => {
     set({ status: 'loading' });
@@ -259,13 +275,45 @@ export const useListStore = create<ListState>((set, get) => ({
     }
   },
 
-  moveItem: async (itemId, direction) => {
+  moveItem: (itemId, beforeId) => {
     const { list, shareToken } = get();
-    if (!list || itemId.startsWith('temp-')) return;
-    const order = await api.moveItem(list.id, itemId, direction, shareToken);
-    if (get().list?.id === list.id) {
-      get().applyRemoteEvent({ event: 'items_reordered', payload: { ...order } });
+    if (!list || itemId.startsWith('temp-') || beforeId?.startsWith('temp-')) {
+      return Promise.resolve();
     }
+    const session = orderSession;
+    const move = { id: crypto.randomUUID(), itemId, beforeId };
+    const confirmedOrder = get().pendingMoves.length
+      ? get().confirmedOrder
+      : list.items.map((item) => item.id);
+    const pendingMoves = [...get().pendingMoves, move];
+    set({
+      confirmedOrder,
+      pendingMoves,
+      list: { ...list, items: applyItemOrder(list.items, confirmedOrder, pendingMoves) },
+    });
+
+    const saving = orderQueue.then(async () => {
+      if (session !== orderSession || get().list?.id !== list.id) return;
+      try {
+        const order = await api.moveItem(list.id, itemId, beforeId, shareToken);
+        if (session !== orderSession || get().list?.id !== list.id) return;
+        get().applyRemoteEvent({ event: 'items_reordered', payload: { ...order } });
+      } finally {
+        const current = get().list;
+        if (session === orderSession && current?.id === list.id) {
+          const remaining = get().pendingMoves.filter((pending) => pending.id !== move.id);
+          set({
+            pendingMoves: remaining,
+            list: {
+              ...current,
+              items: applyItemOrder(current.items, get().confirmedOrder, remaining),
+            },
+          });
+        }
+      }
+    });
+    orderQueue = saving.catch(() => undefined);
+    return saving;
   },
 
   removeItem: async (itemId) => {
@@ -312,18 +360,13 @@ export const useListStore = create<ListState>((set, get) => ({
       if (!Array.isArray(payload.order) || typeof payload.order_updated_at !== 'string') return;
       const previousOrderAt = get().orderUpdatedAt;
       if (previousOrderAt && previousOrderAt >= payload.order_updated_at) return;
-      const order = payload.order;
-      const positions = new Map(order.map((id, index) => [id, index + 1]));
+      const order = payload.order.filter((id): id is string => typeof id === 'string');
       set({
         orderUpdatedAt: payload.order_updated_at,
+        confirmedOrder: order,
         list: {
           ...list,
-          items: sortItems(
-            list.items.map((item, index) => ({
-              ...item,
-              position: positions.get(item.id) ?? order.length + index + 1,
-            })),
-          ),
+          items: applyItemOrder(list.items, order, get().pendingMoves),
         },
       });
       return;

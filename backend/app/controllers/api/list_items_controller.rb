@@ -61,8 +61,11 @@ module Api
     end
 
     def move
-      direction = params.require(:direction)
-      return render_error(:unprocessable_content, "direcao_invalida") unless %w[up down].include?(direction)
+      anchored = params.key?(:before_id)
+      direction = params[:direction]
+      unless anchored || %w[up down].include?(direction)
+        return render_error(:unprocessable_content, "direcao_invalida")
+      end
 
       payload = @list.with_lock do
         authorize_access!(@list)
@@ -72,9 +75,20 @@ module Api
         index = items.index { |item| item.id == @item.id }
         return render_error(:not_found, "nao_encontrado") unless index
 
-        target = index + (direction == "up" ? -1 : 1)
+        if anchored
+          before_id = params[:before_id]
+          unless before_id.nil? || (before_id.is_a?(String) && items.any? { |item| item.id == before_id })
+            return render_error(:unprocessable_content, "destino_invalido")
+          end
+          moving = items.delete_at(index)
+          target = before_id.nil? ? items.length : items.index { |item| item.id == before_id }
+          target = index if before_id == moving.id
+          items.insert(target, moving)
+        else
+          target = index + (direction == "up" ? -1 : 1)
+          items[index], items[target] = items[target], items[index] if target.between?(0, items.length - 1)
+        end
         if target.between?(0, items.length - 1)
-          items[index], items[target] = items[target], items[index]
           items.each_with_index do |item, position|
             item.update_columns(position: position + 1) if item.position != position + 1
           end

@@ -1,10 +1,12 @@
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Check, MoreHorizontal } from 'lucide-react';
-import { AnimatePresence, m } from 'motion/react';
+import { m } from 'motion/react';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ListItemPayload } from '@/lib/api';
-import { easing, sheetItem, spring } from '@/lib/motion';
+import { easing, spring } from '@/lib/motion';
 import { formatQuantity, type ShoppingChanges, shoppingValues } from '@/lib/shopping';
 import { cn } from '@/lib/utils';
 import { HandStrike } from './HandStrike';
@@ -44,24 +46,21 @@ export function ListItemRow({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.content);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pressOrigin = useRef({ x: 0, y: 0 });
-  const held = useRef(false);
   const actionable = !readOnly && !item.id.startsWith('temp-');
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: item.id,
+    disabled: !actionable || editing,
+  });
   const { quantityMillis } = shoppingValues(item);
   const showQuantity = shopping && !shoppingExpanded && quantityMillis > 1000;
-
-  function cancelPress() {
-    if (pressTimer.current) clearTimeout(pressTimer.current);
-    pressTimer.current = null;
-  }
-
-  useEffect(
-    () => () => {
-      if (pressTimer.current) clearTimeout(pressTimer.current);
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!editing) setDraft(item.content);
@@ -84,11 +83,10 @@ export function ListItemRow({
   }
 
   return (
-    <m.li
-      variants={sheetItem}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
+    <li
+      ref={setNodeRef}
+      data-item-id={item.id}
+      data-dragging={isDragging || undefined}
       className={cn(
         'group relative items-center gap-x-3 pr-1 pl-3',
         shopping
@@ -97,7 +95,15 @@ export function ListItemRow({
             ? 'attributed-item sm:flex'
             : 'flex',
       )}
-      style={{ ...authorStyle, minHeight: 'var(--rule-height)' }}
+      style={{
+        ...authorStyle,
+        minHeight: 'var(--rule-height)',
+        transform: CSS.Translate.toString(transform),
+        transition: transition
+          ? `${transition}, padding-block 240ms cubic-bezier(0.22, 1, 0.36, 1), row-gap 240ms cubic-bezier(0.22, 1, 0.36, 1)`
+          : undefined,
+        opacity: isDragging ? 0.25 : 1,
+      }}
     >
       {byOther ? (
         <span
@@ -161,51 +167,12 @@ export function ListItemRow({
         <button
           type="button"
           disabled={readOnly}
-          onClick={() => {
-            if (held.current) {
-              held.current = false;
-              return;
-            }
-            setEditing(true);
-          }}
-          onPointerDown={(event) => {
-            cancelPress();
-            held.current = false;
-            if (!actionable || event.pointerType === 'mouse' || !event.isPrimary) return;
-            pressOrigin.current = { x: event.clientX, y: event.clientY };
-            pressTimer.current = setTimeout(() => {
-              held.current = true;
-              onActions();
-            }, 500);
-          }}
-          onPointerMove={(event) => {
-            if (
-              Math.hypot(
-                event.clientX - pressOrigin.current.x,
-                event.clientY - pressOrigin.current.y,
-              ) > 8
-            )
-              cancelPress();
-          }}
-          onPointerUp={cancelPress}
-          onPointerCancel={cancelPress}
-          onPointerLeave={cancelPress}
-          onContextMenu={(event) => {
-            if (!actionable) return;
-            event.preventDefault();
-            cancelPress();
-            held.current = true;
-            onActions();
-          }}
-          onKeyDown={(event) => {
-            if (
-              actionable &&
-              (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10'))
-            ) {
-              event.preventDefault();
-              onActions();
-            }
-          }}
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label={`${item.content}. Segure para arrastar ou toque para editar`}
+          onClick={() => setEditing(true)}
+          onContextMenu={(event) => event.preventDefault()}
           className={cn(
             'item-content min-w-0 flex-1 text-left',
             showQuantity && 'flex items-baseline gap-1.5',
@@ -245,16 +212,14 @@ export function ListItemRow({
         </Tooltip>
       ) : null}
 
-      <AnimatePresence initial={false}>
-        {shopping && shoppingExpanded && onShoppingChange ? (
-          <ShoppingFields
-            key="shopping-fields"
-            item={item}
-            readOnly={readOnly || item.id.startsWith('temp-')}
-            onChange={onShoppingChange}
-          />
-        ) : null}
-      </AnimatePresence>
+      {shopping && onShoppingChange ? (
+        <ShoppingFields
+          expanded={shoppingExpanded}
+          item={item}
+          readOnly={readOnly || item.id.startsWith('temp-')}
+          onChange={onShoppingChange}
+        />
+      ) : null}
 
       {!readOnly && (
         <button
@@ -269,6 +234,6 @@ export function ListItemRow({
           <MoreHorizontal className="size-4" />
         </button>
       )}
-    </m.li>
+    </li>
   );
 }
