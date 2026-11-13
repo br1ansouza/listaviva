@@ -13,6 +13,10 @@ As respostas e os eventos expõem IDs de autoria derivados por HMAC, separados d
 - Até 230 itens por lista e 30 listas por identidade do navegador, com controle de concorrência no PostgreSQL. Não há limpeza retroativa por essas cotas.
 - Substituição da lista mais antiga em transação, mediante ID e versão confirmados. Alterações na lista exigem nova confirmação; uma criação inválida não apaga dados.
 - Rate limiting por IP: 60 tentativas de criação/hora, 60 gerações de link/hora, 600 requisições de API/5 minutos e 60 handshakes WebSocket/minuto. A margem de tentativas de criação permite apresentar e confirmar a substituição após criar 30 listas.
+- Lista sem acesso responde 404, igual a lista inexistente, para não confirmar IDs a quem não tem credencial.
+- WebSocket: até 20 conexões simultâneas por IP, 5 assinaturas por conexão e 30 comandos a cada 10 segundos por conexão; o excedente é fechado sem reconexão automática.
+- Criação de listas e itens recusada com 503 `sem_capacidade` enquanto o banco passar de 400 MB, até a limpeza de listas expiradas liberar espaço.
+- `/wake` no Worker aceita 5 chamadas por minuto por IP e 30 por minuto por localidade da Cloudflare, e só dispara um deploy depois de duas verificações falhas com 75 segundos de intervalo e sem deploy nos últimos 15 minutos.
 - Corpos de escrita da API limitados a 32 KiB antes do processamento de parâmetros; validação de conteúdo e metadados também no modelo.
 - UUIDs privados não são serializados; parâmetros sensíveis são filtrados dos logs Rails e a identificação de conexões usa um ID aleatório independente.
 - Respostas privadas sem armazenamento em cache; CSP, bloqueio de incorporação em frames e política de referência definidos em `frontend/public/_headers`.
