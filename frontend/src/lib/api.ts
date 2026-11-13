@@ -190,15 +190,10 @@ export interface ItemOrderPayload {
 }
 
 export const api = {
-  moveItem: (
-    listId: string,
-    itemId: string,
-    direction: 'up' | 'down',
-    shareToken?: string | null,
-  ) =>
+  moveItem: (listId: string, itemId: string, beforeId: string | null, shareToken?: string | null) =>
     request<ItemOrderPayload>(`/lists/${listId}/items/${itemId}/move`, {
       method: 'POST',
-      body: { direction },
+      body: { before_id: beforeId },
       shareToken,
     }),
   createList: (list: ListDraft, replacement?: ListReplacement) =>
