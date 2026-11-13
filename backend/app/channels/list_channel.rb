@@ -1,7 +1,10 @@
 class ListChannel < ApplicationCable::Channel
+  MAX_SUBSCRIPTIONS_PER_CONNECTION = 5
+
   periodically :verify_access, every: 15.seconds
 
   def subscribed
+    return reject if connection.subscriptions.identifiers.size > MAX_SUBSCRIPTIONS_PER_CONNECTION
     return reject unless DeviceIdentity.valid?(params[:list_id])
 
     @list_id = params[:list_id]
