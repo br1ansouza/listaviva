@@ -4,6 +4,7 @@ module Api
 
     rescue_from ActiveRecord::RecordNotUnique, with: :render_duplicate
 
+    before_action :require_capacity!, only: :create
     before_action :set_list
     before_action :authorize_list_access!
     before_action :set_item, only: [ :update, :destroy, :move ]

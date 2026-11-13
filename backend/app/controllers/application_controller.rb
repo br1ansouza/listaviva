@@ -31,6 +31,10 @@ class ApplicationController < ActionController::API
     render_error(:bad_request, "device_id_invalido") unless DeviceIdentity.valid?(device_id)
   end
 
+  def require_capacity!
+    render_error(:service_unavailable, "sem_capacidade") if DatabaseCapacity.exceeded?
+  end
+
   def prevent_sensitive_caching
     response.headers["Cache-Control"] = "no-store"
     response.headers["Referrer-Policy"] = "no-referrer"
