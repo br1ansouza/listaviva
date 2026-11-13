@@ -4,8 +4,9 @@ module Api
 
     PERSONALIZATION_FIELDS = %w[icon color list_type favorite].freeze
 
+    before_action :require_capacity!, only: :create
     before_action :set_list, only: [ :show, :update, :share ]
-    before_action :authorize_list_access!, only: [ :show, :update ]
+    before_action :authorize_list_access!, only: [ :show, :update, :share ]
 
     def create
       list, replaced = ListCreation.call(

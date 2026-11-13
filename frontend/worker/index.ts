@@ -1,31 +1,58 @@
+interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
   API_HEALTH_URL: string;
   RENDER_SERVICE_ID: string;
   RENDER_API_KEY: string;
+  WAKE_LIMIT_IP: RateLimiter;
+  WAKE_LIMIT_GLOBAL: RateLimiter;
 }
 
 interface RenderDeployEntry {
   deploy: { createdAt: string };
 }
 
-type RescueOutcome = 'api_respondendo' | 'deploy_recente' | 'deploy_disparado' | 'falha_render';
+type RescueOutcome =
+  | 'api_respondendo'
+  | 'api_acordou'
+  | 'deploy_recente'
+  | 'deploy_disparado'
+  | 'falha_render';
 
 const WAKE_PATH = '/wake';
 const HEALTH_TIMEOUT = 15_000;
+const CONFIRMATION_DELAY = 75_000;
 const REDEPLOY_COOLDOWN = 15 * 60_000;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (new URL(request.url).pathname !== WAKE_PATH) return env.ASSETS.fetch(request);
     if (request.method !== 'POST') return new Response(null, { status: 405 });
+    if (!(await withinWakeLimits(request, env))) {
+      return Response.json({ status: 'limite' }, { status: 429 });
+    }
 
     return Response.json({ status: await rescueApi(env) });
   },
 };
 
+async function withinWakeLimits(request: Request, env: Env): Promise<boolean> {
+  const ip = request.headers.get('CF-Connecting-IP') ?? 'desconhecido';
+  const [perIp, global] = await Promise.all([
+    env.WAKE_LIMIT_IP.limit({ key: `ip:${ip}` }),
+    env.WAKE_LIMIT_GLOBAL.limit({ key: 'todos' }),
+  ]);
+
+  return perIp.success && global.success;
+}
+
 async function rescueApi(env: Env): Promise<RescueOutcome> {
   if (await apiAnswers(env)) return 'api_respondendo';
+  await new Promise((resolve) => setTimeout(resolve, CONFIRMATION_DELAY));
+  if (await apiAnswers(env)) return 'api_acordou';
   if (await recentDeployExists(env)) return 'deploy_recente';
 
   const response = await fetch(renderDeploysUrl(env), {

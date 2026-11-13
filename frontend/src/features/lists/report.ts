@@ -15,6 +15,11 @@ export function report(action: Promise<void>): void {
       return;
     }
 
+    if (error instanceof ApiError && error.code === 'sem_capacidade') {
+      toast.error('O ListaViva está sem espaço no momento. Tente mais tarde.');
+      return;
+    }
+
     if (error instanceof ApiError && error.status === 429) {
       toast.error('Muitas alterações em pouco tempo. Aguarde um pouco e tente novamente.');
       return;
