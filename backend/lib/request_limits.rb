@@ -8,7 +8,7 @@ class RequestLimits
   end
 
   def call(env)
-    if env["PATH_INFO"].start_with?("/api/") && %w[POST PATCH PUT].include?(env["REQUEST_METHOD"])
+    if env["PATH_INFO"].start_with?("/api/")
       return too_large if env["CONTENT_LENGTH"].to_i > MAX_BODY_BYTES
 
       body = env["rack.input"]&.read(MAX_BODY_BYTES + 1).to_s

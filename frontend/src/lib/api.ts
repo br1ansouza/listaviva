@@ -222,7 +222,7 @@ export const api = {
       body: { expires_in: expiresIn },
     }),
 
-  listByToken: (token: string) => request<ListPayload>(`/lists/by_token/${token}`),
+  listByToken: (token: string) => request<ListPayload>('/lists/shared', { shareToken: token }),
 
   createItem: (
     listId: string,
