@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { DEVICE_NAME_MAX_LENGTH, truncateName } from '@/lib/device';
+import { clampName, DEVICE_NAME_MAX_LENGTH, truncateName } from '@/lib/device';
 import { useIdentity } from '@/lib/identity';
 
 function nameLength(value: string): number {
@@ -56,7 +56,7 @@ export function NameDialog() {
           <div className="relative">
             <input
               value={draft}
-              onChange={(event) => setDraft(truncateName(event.target.value))}
+              onChange={(event) => setDraft(clampName(event.target.value.trimStart()))}
               placeholder="Brian 🐧"
               aria-label="Seu nome"
               className="h-11 w-full rounded-xl border border-hairline bg-surface px-3 pr-14 text-[0.95rem] text-ink outline-none transition-colors focus:border-brand/60"
