@@ -56,7 +56,7 @@ flowchart LR
 | Frontend | React 19, TypeScript, Rsbuild, Tailwind CSS 4, shadcn/ui, Motion, Zustand |
 | Backend | Ruby on Rails 8.1 (API), Action Cable, Solid Cable, Solid Queue |
 | Banco | PostgreSQL 16 |
-| Qualidade | Biome, `tsc`, RuboCop, Brakeman, Bundler Audit |
+| Qualidade | Minitest, `bun test`, Biome, `tsc`, RuboCop, Brakeman, Bundler Audit |
 | Hospedagem | Cloudflare Workers, Render, Neon |
 
 ## Rodando localmente
@@ -86,12 +86,14 @@ O `scripts/dev.sh` também ativa os hooks de Git do projeto: o `pre-commit` roda
 ```bash
 # em frontend/
 bun run check       # Biome e TypeScript
+bun test            # testes de unidade
 bun run verify      # check + build de produção
 
 # na raiz
 docker compose logs -f api
 docker compose run --rm api bin/rails console
 docker compose run --rm api bin/rubocop
+docker compose run --rm -e RAILS_ENV=test api bin/rails test
 ```
 
 </details>
@@ -108,4 +110,4 @@ Cada push na `main` passa pela [CI](.github/workflows/ci.yml) e, com tudo verde,
 
 ---
 
-Feito por [Brian Souza](https://github.com/br1ansouza).
+Feito por [Brian Souza](https://github.com/br1ansouza). Código sob a [licença MIT](LICENSE).
