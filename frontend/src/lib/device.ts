@@ -54,11 +54,15 @@ export function deviceId(): string {
   return stored;
 }
 
-export function truncateName(value: string): string {
-  return [...new Intl.Segmenter().segment(value.trim())]
+export function clampName(value: string): string {
+  return [...new Intl.Segmenter().segment(value)]
     .slice(0, DEVICE_NAME_MAX_LENGTH)
     .map((entry) => entry.segment)
     .join('');
+}
+
+export function truncateName(value: string): string {
+  return clampName(value.trim()).trim();
 }
 
 export function readDeviceName(): string | null {

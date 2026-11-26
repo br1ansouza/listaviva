@@ -1,4 +1,4 @@
-const CACHE = 'listaviva-v1';
+const CACHE = 'listaviva-v2';
 const SHELL = '/index.html';
 
 self.addEventListener('install', (event) => {
@@ -30,7 +30,17 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => caches.match(SHELL)));
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && !response.redirected) {
+            const copy = response.clone();
+            event.waitUntil(caches.open(CACHE).then((cache) => cache.put(SHELL, copy)));
+          }
+          return response;
+        })
+        .catch(() => caches.match(SHELL)),
+    );
     return;
   }
 
@@ -40,8 +50,10 @@ self.addEventListener('fetch', (event) => {
         (cached) =>
           cached ??
           fetch(request).then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
+            if (response.ok) {
+              const copy = response.clone();
+              event.waitUntil(caches.open(CACHE).then((cache) => cache.put(request, copy)));
+            }
             return response;
           }),
       ),
