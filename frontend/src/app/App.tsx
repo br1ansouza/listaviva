@@ -3,6 +3,7 @@ import { domAnimation, LazyMotion } from 'motion/react';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AppShell } from '@/components/layout/AppShell';
 import { HomePage } from '@/features/lists/HomePage';
 
@@ -38,16 +39,18 @@ export function App() {
     <LazyMotion features={domAnimation} strict>
       <BrowserRouter>
         <AppShell>
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/nova" element={<CreateListPage />} />
-              <Route path="/lista/:id" element={<ListPage />} />
-              <Route path="/l/:token" element={<LiveRoomPage />} />
-              <Route path="/historico" element={<HistoryPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/nova" element={<CreateListPage />} />
+                <Route path="/lista/:id" element={<ListPage />} />
+                <Route path="/l/:token" element={<LiveRoomPage />} />
+                <Route path="/historico" element={<HistoryPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </AppShell>
         <Suspense fallback={null}>
           <Toaster />
