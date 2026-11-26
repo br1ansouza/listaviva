@@ -1,226 +1,111 @@
 <div align="center">
 
-<img src="frontend/public/icons/icon-192.png" alt="Marca do ListaViva" width="88" height="88">
+<img src="frontend/public/icons/icon-192.png" alt="Marca do ListaViva" width="80" height="80">
 
 # ListaViva
 
-### Combine agora. Resolva junto.
-
-Listas colaborativas em tempo real, sem cadastro e sem anúncios.<br>
-Do mercado da semana ao próximo rolê: crie, compartilhe e risque junto.
+**Listas colaborativas em tempo real. Sem cadastro, compartilhadas por link.**
 
 [![CI](https://github.com/br1ansouza/listaviva/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/br1ansouza/listaviva/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/br1ansouza/listaviva?label=release)](https://github.com/br1ansouza/listaviva/releases)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=61DAFB)](frontend/package.json)
-[![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)](backend/Gemfile)
 
-[**Abrir o ListaViva**](https://listaviva.br1ansouza.workers.dev) · [Como rodar](#rodando-localmente) · [Contribuir](#contribuindo) · [Reportar um problema](https://github.com/br1ansouza/listaviva/issues)
+[**Abrir o app →**](https://listaviva.br1ansouza.workers.dev)
+
+<br>
+
+<img src=".github/readme/home.png" alt="Tela inicial" width="24%">
+<img src=".github/readme/compras.png" alt="Lista de compras com quantidades, preços e total" width="24%">
+<img src=".github/readme/tarefas-escuro.png" alt="Lista de tarefas no tema escuro, com autoria dos itens" width="24%">
+<img src=".github/readme/historico.png" alt="Histórico de listas" width="24%">
 
 </div>
 
----
+<br>
 
-## Uma lista, todo mundo junto
+Você cria uma lista, manda o link no grupo do WhatsApp e todo mundo edita junto. Alguém risca o carvão no mercado e o risco aparece na hora no celular de quem ficou em casa. Ninguém precisa criar conta nem instalar nada.
 
-O ListaViva tira as pequenas combinações do meio das mensagens do grupo. Cada pessoa abre o mesmo link, vê o que falta e atualiza a lista na hora, pelo computador ou celular.
+## O que tem
 
-- **Comece sem conta.** Escolha um nome para identificar o que você anota.
-- **Organize do seu jeito.** Tarefas, compras, eventos, refeições e ideias, com seis cores e uma seleção de ícones.
-- **Edite em tempo real.** Adicione, renomeie e risque itens; as mudanças aparecem para quem está na lista.
-- **Some as compras.** Nas listas de mercado, expanda os detalhes para informar quantidade (inclusive fracionada) e preço unitário em reais. Cada produto mostra seu subtotal e o rodapé soma todos os itens, incluindo os riscados. Recolha os valores para priorizar os nomes dos produtos, especialmente no celular.
-- **Compartilhe por link.** Envie pelo WhatsApp ou copie o endereço, com validade de 8 horas, 1 dia ou 1 semana.
-- **Retome depois.** As listas que você criou ficam no histórico do app, inclusive quando o link expira. Marque as mais usadas com a estrela para mantê-las no topo.
-- **Use em qualquer tela.** Interface responsiva, temas claro e escuro, transições suaves e suporte à instalação como PWA.
+- **Cinco tipos de lista:** tarefas, compras, evento, refeições e ideias, cada uma com cor e ícone.
+- **Edição ao vivo:** adicionar, renomear, riscar e reordenar itens arrastando. Cada item mostra quem escreveu.
+- **Conta do mercado:** quantidade (inclusive fracionada) e preço por item, com subtotal e total da lista.
+- **Link com validade:** 8 horas, 1 dia ou 1 semana. Quando vence, a lista continua no histórico de quem criou e pode ganhar outro link.
+- **PWA:** instalável, com tema claro e escuro.
 
-### Do primeiro item ao último risco
+## Como funciona
 
-1. **Crie a lista:** escolha o tipo, o título, a cor e o ícone. Os itens já são salvos antes de compartilhar.
-2. **Convide o grupo:** gere um link e escolha sua validade. Quem abrir pode editar o título e os itens; a personalização e a geração de links ficam com quem criou.
-3. **Resolva junto:** acompanhe o progresso e a autoria das anotações. Se o link vencer, o criador pode gerar outro pelo histórico.
+```mermaid
+flowchart LR
+  B["Navegador (PWA)"] -->|estáticos| W["Cloudflare Workers"]
+  B -->|REST + WebSocket| A["Rails 8 API (Render)"]
+  A --> P[("PostgreSQL (Neon)")]
+```
 
-Gerar outro link substitui o anterior. Listas com compartilhamento expirado há mais de 90 dias entram na rotina de limpeza.
+**Tempo real sem Redis.** As escritas chegam por HTTP, são gravadas e transmitidas pelo Action Cable no canal da lista. O pub/sub é o Solid Cable, que usa o próprio PostgreSQL, e os jobs rodam no Solid Queue, também no banco. A infraestrutura inteira é um processo Rails e um Postgres.
 
-Cada lista aceita até **230 itens**. O histórico comporta **30 listas por identidade do navegador**: ao atingir esse limite, o app oferece excluir a mais antiga para criar outra, exibindo seu título, data e quantidade de itens. A exclusão exige confirmação e é permanente; cancelar preserva tudo. Itens nunca são excluídos automaticamente para abrir espaço.
+**Interface otimista.** O cliente aplica a mudança antes de o servidor responder e depois reconcilia com a confirmação e com os eventos dos outros participantes, em qualquer ordem de chegada. Não há CRDT: os itens são pequenos o bastante para "a última escrita vence" funcionar bem.
+
+**Identidade sem cadastro.** O navegador gera um UUID, guardado em `localStorage` e em cookie, e o envia em cada requisição. Esse UUID é a credencial de quem criou a lista e nunca sai do servidor de volta: os IDs de autoria que aparecem nas respostas são derivados por HMAC e mudam de uma lista para outra. O link compartilhado é uma segunda credencial, que dá direito de edição enquanto for válido.
+
+**Hospedagem gratuita, com as limitações dela.** A API dorme depois de alguns minutos sem tráfego e leva cerca de um minuto para acordar; o app avisa e reconecta sozinho. Se ela não voltar, o Worker que serve o frontend confirma a queda e dispara um novo deploy. Cotas de listas, itens, requisições e conexões seguram o uso dentro do plano gratuito. Os detalhes estão em [SECURITY.md](SECURITY.md).
+
+## Stack
+
+| | |
+| --- | --- |
+| Frontend | React 19, TypeScript, Rsbuild, Tailwind CSS 4, shadcn/ui, Motion, Zustand |
+| Backend | Ruby on Rails 8.1 (API), Action Cable, Solid Cable, Solid Queue |
+| Banco | PostgreSQL 16 |
+| Qualidade | Biome, `tsc`, RuboCop, Brakeman, Bundler Audit |
+| Hospedagem | Cloudflare Workers, Render, Neon |
 
 ## Rodando localmente
 
-Você precisa de **Git**, **Bun** e **Docker com Compose**. Ruby e PostgreSQL rodam em containers; não é necessário instalá-los na máquina. Os scripts abaixo usam Bash.
-
-### 1. Prepare o projeto
+Requisitos: Git, [Bun](https://bun.sh) e Docker com Compose. Ruby e PostgreSQL rodam em containers.
 
 ```bash
 git clone --branch dev https://github.com/br1ansouza/listaviva.git
 cd listaviva
-cp .env.example .env
+cp .env.example .env                 # preencha POSTGRES_USER, POSTGRES_PASSWORD e POSTGRES_DB
 
-cd frontend
-bun install --frozen-lockfile
-cd ..
-```
+(cd frontend && bun install --frozen-lockfile)
 
-No `.env`, ajuste `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB`. Para uso local, mantenha `FRONTEND_URL=http://localhost:5173`. As variáveis da seção de produção não são necessárias.
-
-### 2. Prepare o banco no primeiro uso
-
-```bash
 docker compose up -d --wait db
 docker compose run --build --rm api bin/rails db:prepare
-```
 
-### 3. Inicie o app
-
-```bash
 ./scripts/dev.sh
 ```
 
-| Serviço | Endereço |
-| --- | --- |
-| Frontend | [localhost:5173](http://localhost:5173) |
-| API | [localhost:3000](http://localhost:3000) |
-| Saúde da API | [localhost:3000/up](http://localhost:3000/up) |
+O frontend sobe em [localhost:5173](http://localhost:5173) e a API em [localhost:3000](http://localhost:3000). `Ctrl+C` encerra o frontend; `docker compose stop` para a API e o banco.
 
-`Ctrl+C` encerra o frontend. Para parar também a API e o banco, execute `docker compose stop`. Os dados ficam no volume do PostgreSQL.
+O `scripts/dev.sh` também ativa os hooks de Git do projeto: o `pre-commit` roda Biome, `tsc` e RuboCop nos arquivos alterados, e o `pre-push` gera o build.
 
 <details>
-<summary>Comandos do dia a dia</summary>
-
-No diretório `frontend/`:
+<summary>Comandos úteis</summary>
 
 ```bash
-bun run dev         # desenvolvimento com atualização automática
+# em frontend/
 bun run check       # Biome e TypeScript
-bun run verify      # Biome, TypeScript e build de produção
-bun run build       # gera frontend/dist
-bun run preview     # serve o build gerado
-```
+bun run verify      # check + build de produção
 
-Na raiz do repositório:
-
-```bash
+# na raiz
 docker compose logs -f api
 docker compose run --rm api bin/rails console
-docker compose run --rm api bin/rails db:migrate
 docker compose run --rm api bin/rubocop
 ```
-
-O `scripts/dev.sh` configura os hooks de Git: o `pre-commit` verifica os arquivos do frontend e do backend conforme as alterações, e o `pre-push` gera o build quando as dependências do frontend estão instaladas.
-
-</details>
-
-## Por dentro do projeto
-
-| Camada | Tecnologias |
-| --- | --- |
-| Interface | React 19, TypeScript, Rsbuild e Tailwind CSS 4 |
-| Componentes e interação | shadcn/ui, Radix UI, Lucide e Motion |
-| Estado do cliente | Zustand, atualizações otimistas e reconciliação dos eventos |
-| API | Ruby on Rails 8.1 em modo API |
-| Tempo real e jobs | Action Cable, Solid Cable e Solid Queue |
-| Persistência | PostgreSQL |
-| Qualidade | Biome, TypeScript, Rubocop, Brakeman e Bundler Audit |
-| Hospedagem | Cloudflare Workers para o frontend, Render para a API e Neon para o banco |
-
-### Tempo real
-
-As alterações saem do navegador por HTTP, são persistidas pela API e transmitidas por WebSocket no canal da lista. O cliente atualiza a interface imediatamente e reconcilia a confirmação sem recriar a linha do item.
-
-O navegador não precisa consultar a lista periodicamente. No servidor, o Solid Cable usa polling no PostgreSQL para distribuir as mensagens entre processos, dispensando Redis. Não há CRDT: escritas concorrentes no mesmo campo são resolvidas pela última atualização persistida.
-
-### Identidade sem cadastro
-
-O navegador gera um UUID e o mantém em `localStorage` e cookie. O app também solicita armazenamento persistente ao navegador para reduzir a chance de remoção automática dos dados — isso não cria uma terceira cópia do identificador.
-
-O histórico pertence a essa identidade, não a uma conta sincronizada entre aparelhos. Limpar os dados do site pode fazer você perder o acesso como criador. O nome escolhido acompanha as anotações para indicar quem escreveu ou editou cada item.
-
-Esse UUID é uma credencial privada, não um identificador público de autor. As respostas HTTP e os eventos usam `created_by_id`, `updated_by_id` e `participant_id`, derivados por HMAC e diferentes em cada lista. Esses IDs públicos não autenticam requisições.
-
-### Segurança e limites
-
-A API verifica permissões independentemente do frontend. O WebSocket revalida o acesso antes de transmitir cada evento e periodicamente, encerrando a assinatura quando o link muda, expira ou a lista é excluída. Respostas privadas usam `Cache-Control: no-store`.
-
-Os limites de itens e listas são conferidos no servidor, com transações e locks para impedir que criações simultâneas ultrapassem a cota. Uma confirmação antiga não pode excluir outra lista nem uma versão modificada da lista exibida. Se a nova lista for inválida, a transação preserva a anterior. Dados que já excedam as cotas não são removidos retroativamente; históricos acima de 30 permitem somente substituição, sem crescimento.
-
-Quem tem um link válido continua podendo editar e excluir itens: as cotas contêm volume, não tornam o compartilhamento à prova de vandalismo. Veja [o modelo de segurança e os cuidados de publicação](SECURITY.md).
-
-### Estrutura
-
-```text
-frontend/
-  src/app/              Entrada e rotas
-  src/components/       Componentes compartilhados e layout
-  src/features/         Listas, identidade e termos de uso
-  src/lib/              API, tema, identidade e utilitários
-  src/styles/           Paleta, superfícies e estilos globais
-  public/               Ícones, manifest e service worker
-backend/
-  app/                  API, modelos, canais e jobs
-  config/               Banco, rotas, filas e ambientes
-  db/                   Schema e migrations
-scripts/                Desenvolvimento e preview
-.github/workflows/      CI, deploy e releases
-```
-
-<details>
-<summary>Referência rápida da API</summary>
-
-| Método | Rota | Função |
-| --- | --- | --- |
-| `POST` | `/api/lists` | Cria uma lista sem link de compartilhamento |
-| `GET` | `/api/lists/mine` | Lista o histórico do criador |
-| `GET` | `/api/lists/:id` | Consulta a lista e seus itens |
-| `PATCH` | `/api/lists/:id` | Atualiza título, tipo, cor ou ícone, conforme a permissão |
-| `POST` | `/api/lists/:id/share` | Gera um link com `expires_in`: `8h`, `1d` ou `1w` |
-| `GET` | `/api/lists/by_token/:token` | Abre uma lista compartilhada |
-| `POST` | `/api/lists/:list_id/items` | Adiciona um item |
-| `PATCH` | `/api/lists/:list_id/items/:id` | Edita ou marca um item |
-| `DELETE` | `/api/lists/:list_id/items/:id` | Remove um item |
-| `GET` | `/cable` | Conexão WebSocket do Action Cable |
-
-O frontend envia `X-Device-Id` em todas as requisições, `X-Device-Name` quando há um nome escolhido e `X-Share-Token` nas operações de quem entrou pelo link. Um link expirado retorna `410 Gone` para visitantes; o criador continua com acesso durante o período de retenção.
-
-`POST /api/lists` retorna `409 limite_de_listas` ao atingir a cota, com `oldest_list` para a confirmação. Somente após confirmar na interface, repita a criação com `replace_list_id` e `replace_list_version` (`oldest_list.version`) no corpo, ao lado de `list`. A substituição é restrita à lista mais antiga do próprio criador. A cota de itens retorna `422 limite_de_itens`; excesso de requisições retorna `429` com `Retry-After`; corpos acima de 32 KiB retornam `413`.
 
 </details>
 
 ## Contribuindo
 
-O fluxo do projeto é **`feature/*` ou `docs/*` → `dev` → `main`**.
+O fluxo é `feature/*` → `dev` → `main`. Abra o PR da sua branch para a `dev`; a `main` é a versão publicada e só recebe PRs vindos da `dev`.
 
-1. Atualize a `dev` e crie uma branch para a mudança.
-2. Faça commits no padrão Conventional Commits, em português e minúsculas: `feat:`, `fix:`, `docs:` ou `chore:`.
-3. Abra o PR da sua branch **para `dev`**.
-4. Depois da integração e validação, abra um PR separado **de `dev` para `main`**.
+Os commits seguem Conventional Commits em português e minúsculas (`feat:`, `fix:`, `docs:`, `chore:`). O código não leva comentários: o motivo de cada decisão fica no commit ou na descrição do PR.
 
-```bash
-git switch dev
-git pull --ff-only origin dev
-git switch -c feature/nome-da-mudanca
-```
+## Deploy
 
-A `main` representa a versão publicada. Features não devem abrir PR diretamente para ela. Registre o motivo das decisões no commit ou na descrição do PR; o projeto evita comentários no código.
-
-Ao atualizar dependências do frontend, mantenha `package.json` e `bun.lock` sincronizados. A CI usa `bun install --frozen-lockfile` e rejeita um lockfile desatualizado, inclusive em PRs do Dependabot.
-
-## Publicação
-
-### Deploy automático
-
-Pushes na `main` executam a [CI](.github/workflows/ci.yml). Quando as verificações do frontend e do backend passam, o workflow publica a API no Render, aguarda o serviço ficar disponível e confere `/up`. Em seguida, publica o frontend no Cloudflare Workers e confere `/` e `/historico`.
-
-PRs e pushes na `dev` executam as verificações, sem publicar em produção.
-
-O workflow usa os segredos `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`. A variável `PUBLIC_API_URL` é incorporada no build do frontend e também define o endereço do WebSocket; mudar a API exige gerar um novo build.
-
-### Releases e imagem Docker
-
-Tags `v*` acionam o [workflow de release](.github/workflows/release.yml), que publica a imagem da API no GitHub Container Registry e anexa o bundle do frontend ao release.
-
-```bash
-docker pull ghcr.io/br1ansouza/listaviva/api:latest
-```
-
-[Ver releases](https://github.com/br1ansouza/listaviva/releases) · [Ver imagem da API](https://github.com/br1ansouza/listaviva/pkgs/container/listaviva%2Fapi)
+Cada push na `main` passa pela [CI](.github/workflows/ci.yml) e, com tudo verde, publica a API no Render e o frontend no Cloudflare Workers. Tags `v*` geram um [release](https://github.com/br1ansouza/listaviva/releases) com o bundle do frontend e a imagem da API em `ghcr.io/br1ansouza/listaviva/api`.
 
 ---
 
-Feito por [Brian Souza](https://github.com/br1ansouza). Encontrou um problema ou tem uma ideia? [Abra uma issue](https://github.com/br1ansouza/listaviva/issues).
+Feito por [Brian Souza](https://github.com/br1ansouza).
