@@ -15,10 +15,13 @@ interface SubscribeOptions {
   onMessage: (message: unknown) => void;
   onStatus: (status: CableStatus) => void;
   onRejected?: () => void;
+  onConfirmed?: () => void;
 }
 
 const FIRST_RETRY_DELAY = 1_000;
 const MAX_RETRY_DELAY = 15_000;
+const STALE_AFTER = 10_000;
+const STALE_CHECK_INTERVAL = 3_000;
 
 function cableUrl(shareToken?: string | null): string {
   const base = apiBaseUrl.replace(/^http/, 'ws');
@@ -35,6 +38,7 @@ export function subscribeToList({
   onMessage,
   onStatus,
   onRejected,
+  onConfirmed,
 }: SubscribeOptions): () => void {
   const identifier = JSON.stringify({ channel: 'ListChannel', list_id: listId });
 
@@ -42,14 +46,28 @@ export function subscribeToList({
   let retryDelay = FIRST_RETRY_DELAY;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
+  let lastActivity = Date.now();
+
+  function dropIfStale() {
+    if (closed || socket?.readyState !== WebSocket.OPEN) return;
+    if (Date.now() - lastActivity > STALE_AFTER) socket.close();
+  }
 
   function connect() {
     if (closed) return;
 
-    socket = new WebSocket(cableUrl(shareToken));
+    const current = new WebSocket(cableUrl(shareToken));
+    socket = current;
+    lastActivity = Date.now();
 
-    socket.addEventListener('message', (event) => {
-      const data = JSON.parse(event.data as string) as CableMessage;
+    current.addEventListener('message', (event) => {
+      lastActivity = Date.now();
+      let data: CableMessage;
+      try {
+        data = JSON.parse(event.data as string) as CableMessage;
+      } catch {
+        return;
+      }
 
       if (data.type === 'welcome') {
         socket?.send(JSON.stringify({ command: 'subscribe', identifier }));
@@ -59,6 +77,7 @@ export function subscribeToList({
       if (data.type === 'confirm_subscription') {
         retryDelay = FIRST_RETRY_DELAY;
         onStatus('live');
+        onConfirmed?.();
         return;
       }
 
@@ -86,23 +105,33 @@ export function subscribeToList({
       }
     });
 
-    socket.addEventListener('close', () => {
-      if (closed) return;
+    current.addEventListener('close', () => {
+      if (closed || socket !== current) return;
 
       onStatus('reconnecting');
       retryTimer = setTimeout(connect, retryDelay);
       retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
     });
 
-    socket.addEventListener('error', () => socket?.close());
+    current.addEventListener('error', () => current.close());
+  }
+
+  function onVisible() {
+    if (document.visibilityState === 'visible') dropIfStale();
   }
 
   onStatus('connecting');
   connect();
+  const staleTimer = setInterval(dropIfStale, STALE_CHECK_INTERVAL);
+  document.addEventListener('visibilitychange', onVisible);
+  window.addEventListener('online', dropIfStale);
 
   return () => {
     closed = true;
     if (retryTimer) clearTimeout(retryTimer);
+    clearInterval(staleTimer);
+    document.removeEventListener('visibilitychange', onVisible);
+    window.removeEventListener('online', dropIfStale);
     socket?.close();
   };
 }

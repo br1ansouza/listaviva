@@ -75,6 +75,7 @@ interface ListState {
   pendingMoves: PendingMove[];
   loadById: (id: string) => Promise<void>;
   loadByToken: (token: string) => Promise<void>;
+  refresh: () => Promise<void>;
   addItem: (content: string) => Promise<void>;
   toggleItem: (itemId: string, done: boolean) => Promise<void>;
   renameItem: (itemId: string, content: string) => Promise<void>;
@@ -177,6 +178,31 @@ export const useListStore = create<ListState>((set, get) => ({
       set({ list: { ...list, items: sortItems(list.items) }, status: 'ready' });
     } catch (error) {
       set({ status: statusFromError(error) });
+    }
+  },
+
+  refresh: async () => {
+    const { list, shareToken } = get();
+    if (!list) return;
+
+    try {
+      const fresh = shareToken ? await api.listByToken(shareToken) : await api.getList(list.id);
+      const current = get().list;
+      if (!current || current.id !== list.id) return;
+
+      const unsaved = current.items.filter((item) => item.id.startsWith('temp-'));
+      const order = fresh.items.map((item) => item.id);
+      set({
+        confirmedOrder: order,
+        list: {
+          ...fresh,
+          items: [...applyItemOrder(sortItems(fresh.items), order, get().pendingMoves), ...unsaved],
+        },
+      });
+    } catch (error) {
+      if (get().list?.id !== list.id) return;
+      const status = statusFromError(error);
+      if (status !== 'error') set({ list: null, status });
     }
   },
 
