@@ -13,6 +13,12 @@
 
 <br>
 
+<img src=".github/readme/demo.gif" alt="Dois celulares editando a mesma lista: o que um escreve ou risca aparece no outro na hora" width="560">
+
+<sub>Dois celulares na mesma lista, sem recarregar.</sub>
+
+<br>
+
 <img src=".github/readme/home.png" alt="Tela inicial" width="24%">
 <img src=".github/readme/compras.png" alt="Lista de compras com quantidades, preços e total" width="24%">
 <img src=".github/readme/tarefas-escuro.png" alt="Lista de tarefas no tema escuro, com autoria dos itens" width="24%">
@@ -30,6 +36,7 @@ Você cria uma lista, manda o link no grupo do WhatsApp e todo mundo edita junto
 - **Edição ao vivo:** adicionar, renomear, riscar e reordenar itens arrastando. Cada item mostra quem escreveu.
 - **Conta do mercado:** quantidade (inclusive fracionada) e preço por item, com subtotal e total da lista.
 - **Link com validade:** 8 horas, 1 dia ou 1 semana. Quando vence, a lista continua no histórico de quem criou e pode ganhar outro link.
+- **Volta sozinho:** se o celular dormir ou trocar de rede, a lista reconecta e busca o que perdeu.
 - **PWA:** instalável, com tema claro e escuro.
 
 ## Como funciona
