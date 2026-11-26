@@ -66,8 +66,20 @@ module Api
       )
     end
 
+    def shared
+      render_shared_list(share_token)
+    end
+
     def by_token
-      list = List.includes(:list_items).find_by!(share_token: params[:token])
+      render_shared_list(params[:token])
+    end
+
+    private
+
+    def render_shared_list(token)
+      return render_not_found if token.blank?
+
+      list = List.includes(:list_items).find_by!(share_token: token)
 
       if list.expired? && !list.created_by?(device_id)
         return render json: { error: "expirada", expires_at: list.expires_at }, status: :gone
@@ -75,8 +87,6 @@ module Api
 
       render json: ListSerializer.call(list, device_id: device_id)
     end
-
-    private
 
     def set_list
       @list = List.includes(:list_items).find(params[:id])

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     resources :lists, only: [ :create, :show, :update ] do
       collection do
         get :mine
+        get :shared
         get "by_token/:token", action: :by_token, as: :by_token
       end
 

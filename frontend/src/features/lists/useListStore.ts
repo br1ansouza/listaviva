@@ -113,6 +113,16 @@ function optimisticTwinId(
     ?.id;
 }
 
+function restoreItems(
+  set: (partial: Partial<ListState>) => void,
+  get: () => ListState,
+  listId: string,
+  restore: (items: ListItemPayload[]) => ListItemPayload[],
+): void {
+  const current = get().list;
+  if (current?.id === listId) set({ list: { ...current, items: restore(current.items) } });
+}
+
 function statusFromError(error: unknown): ListStatus {
   if (error instanceof ApiError) {
     if (error.isExpired) return 'expired';
@@ -222,7 +232,8 @@ export const useListStore = create<ListState>((set, get) => ({
     const { list, shareToken } = get();
     if (!list || itemId.startsWith('temp-')) return;
 
-    const previous = list.items;
+    const previous = list.items.find((item) => item.id === itemId);
+    if (!previous) return;
     set({
       list: {
         ...list,
@@ -233,8 +244,11 @@ export const useListStore = create<ListState>((set, get) => ({
     try {
       await api.updateItem(list.id, itemId, { done }, shareToken);
     } catch (error) {
-      const current = get().list;
-      if (current) set({ list: { ...current, items: previous } });
+      restoreItems(set, get, list.id, (items) =>
+        items.map((item) =>
+          item.id === itemId && item.done === done ? { ...item, done: previous.done } : item,
+        ),
+      );
       throw error;
     }
   },
@@ -247,7 +261,8 @@ export const useListStore = create<ListState>((set, get) => ({
     if (!normalized) return;
     if (duplicateOf(list.items, normalized, itemId)) throw new DuplicateItemError();
 
-    const previous = list.items;
+    const previous = list.items.find((item) => item.id === itemId);
+    if (!previous) return;
     set({
       list: {
         ...list,
@@ -260,8 +275,13 @@ export const useListStore = create<ListState>((set, get) => ({
     try {
       await api.updateItem(list.id, itemId, { content: normalized }, shareToken);
     } catch (error) {
-      const current = get().list;
-      if (current) set({ list: { ...current, items: previous } });
+      restoreItems(set, get, list.id, (items) =>
+        items.map((item) =>
+          item.id === itemId && item.content === normalized
+            ? { ...item, content: previous.content }
+            : item,
+        ),
+      );
       throw error;
     }
   },
@@ -320,16 +340,20 @@ export const useListStore = create<ListState>((set, get) => ({
     const { list, shareToken } = get();
     if (!list) return;
 
-    const previous = list.items;
+    const removed = list.items.find((item) => item.id === itemId);
+    const removedIndex = list.items.findIndex((item) => item.id === itemId);
     set({ list: { ...list, items: list.items.filter((item) => item.id !== itemId) } });
 
-    if (itemId.startsWith('temp-')) return;
+    if (!removed || itemId.startsWith('temp-')) return;
 
     try {
       await api.deleteItem(list.id, itemId, shareToken);
     } catch (error) {
-      const current = get().list;
-      if (current) set({ list: { ...current, items: previous } });
+      restoreItems(set, get, list.id, (items) =>
+        items.some((item) => item.id === itemId)
+          ? items
+          : items.toSpliced(removedIndex, 0, removed),
+      );
       throw error;
     }
   },
@@ -338,15 +362,19 @@ export const useListStore = create<ListState>((set, get) => ({
     const { list, shareToken } = get();
     if (!list) return;
 
-    const previous = list;
+    const reverted: ListChanges = {};
+    for (const key of Object.keys(changes) as (keyof ListChanges)[]) {
+      Object.assign(reverted, { [key]: list[key] });
+    }
     set({ list: { ...list, ...changes } });
 
     try {
       const saved = await api.updateList(list.id, changes, shareToken);
       const current = get().list;
-      set({ list: { ...saved, items: current ? current.items : saved.items } });
+      if (current?.id === list.id) set({ list: { ...saved, items: current.items } });
     } catch (error) {
-      set({ list: previous });
+      const current = get().list;
+      if (current?.id === list.id) set({ list: { ...current, ...reverted } });
       throw error;
     }
   },
